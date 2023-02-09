@@ -1,10 +1,14 @@
 import { type AppType } from "next/app";
 import { type Session } from "next-auth";
 import { SessionProvider } from "next-auth/react";
+import { signOut, useSession } from "next-auth/react"
+import { PropsWithChildren } from "react"
+import Link from "next/link";
 
 import { api } from "../utils/api";
 
 import "../styles/globals.css";
+import { noop } from "../utils/common";
 
 const MyApp: AppType<{ session: Session | null }> = ({
   Component,
@@ -19,10 +23,7 @@ const MyApp: AppType<{ session: Session | null }> = ({
   );
 };
 
-import { signOut, useSession } from "next-auth/react"
-import { PropsWithChildren } from "react"
-
-function Layout(props: PropsWithChildren<{}>) {
+function Layout(props: PropsWithChildren<unknown>) {
   return <div>
     <Sidebar></Sidebar>
     <div className="flex">
@@ -42,11 +43,11 @@ function SidebarButton(props: { text: string }) {
 function Sidebar() {
   return <div className="flex flex-col bg-slate-900 text-white fixed w-1/12 items-stretch h-full gap-3 text-2xl">
     <Profile />
-    <a href="/"><SidebarButton text="Home"/></a>
-    <a href="/play"><SidebarButton text="Play" /></a>
-    <a href="/social"><SidebarButton text="Social" /></a>
-    <a href="/settings"><SidebarButton text="Settings" /></a>
-    <button onClick={() => signOut()}><SidebarButton text="Logout" /></button>
+    <Link href="/"><SidebarButton text="Home" /></Link>
+    <Link href="/play"><SidebarButton text="Play" /></Link>
+    <Link href="/social"><SidebarButton text="Social" /></Link>
+    <Link href="/settings"><SidebarButton text="Settings" /></Link>
+    <button onClick={() => { signOut().catch(noop) }}><SidebarButton text="Logout" /></button>
   </div>
 }
 
