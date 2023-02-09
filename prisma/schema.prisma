@@ -8,23 +8,54 @@ generator client {
 }
 
 model User {
-    id            String       @id @default(uuid())
-    createdAt     DateTime     @default(now())
-    email         String       @unique
-    password_hash String
-    name          String       @unique
-    role          Role         @default(default)
+    id            String    @id @default(uuid())
+    name          String?
+    email         String?   @unique
+    emailVerified DateTime?
+    image         String?
+    accounts      Account[]
+    sessions      Session[]
+    createdAt     DateTime  @default(now())
+    role          Role      @default(default)
     game          Game[]
-    chips         Int
-    friends       User[]       @relation("Friends")
-    friendedBy    User[]       @relation("Friends")
+    chips         Int       @default(1000)
+    friends       User[]    @relation("Friends")
+    friendedBy    User[]    @relation("Friends")
 }
 
-model LoginToken {
-    id        String   @id @default(uuid())
-    createdAt DateTime @default(now())
-    value     String   @unique
-    userId    String
+model Account {
+    id                       String  @id @default(cuid())
+    userId                   String
+    type                     String
+    provider                 String
+    providerAccountId        String  @unique
+    refresh_token            String? // @db.Text
+    access_token             String? // @db.Text
+    expires_at               Int?
+    token_type               String?
+    scope                    String?
+    id_token                 String? // @db.Text
+    session_state            String?
+    refresh_token_expires_in Int?
+    user                     User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+    @@unique([provider, providerAccountId])
+}
+
+model VerificationToken {
+    identifier String
+    token      String   @unique
+    expires    DateTime
+
+    @@unique([identifier, token])
+}
+
+model Session {
+    id           String   @id @default(cuid())
+    sessionToken String   @unique
+    userId       String
+    expires      DateTime
+    user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model Player {
@@ -35,15 +66,15 @@ model Player {
 }
 
 model Game {
-    id        String   @id @default(uuid())
-    createdAt DateTime @default(now())
-    player    User[]
-    min_bid   Int
-    max_bid   Int
-    pot       Int
-    cards     String[]
-    access    Access
-    password  String?
+    id         String   @id @default(uuid())
+    createdAt  DateTime @default(now())
+    player     User[]
+    min_bid    Int
+    max_bid    Int
+    pot        Int
+    cards      String[]
+    access     Access
+    password   String?
     role_index Int
 }
 

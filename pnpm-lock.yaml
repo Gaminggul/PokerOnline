@@ -18,7 +18,7 @@ specifiers:
   eslint: ^8.30.0
   eslint-config-next: 13.1.6
   next: 13.1.6
-  next-auth: ^4.19.0
+  next-auth: ^4.19.2
   postcss: ^8.4.14
   prettier: ^2.8.1
   prettier-plugin-tailwindcss: ^0.2.1
