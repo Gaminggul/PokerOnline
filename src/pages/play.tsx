@@ -12,7 +12,7 @@ function Play() {
             <CAJButton text="Create Game" route="/create"></CAJButton>
         </Column>
         <Column>
-            <img src="/joingame.png" alt="joingame.png" className="w-[500px] rounded-xl" />
+            <img src="/joingame.jpg" alt="joingame.jpg" className="w-[500px] rounded-xl" />
             <h2 className="p-10 font-bold text-5xl">
                 Join Game
             </h2>
