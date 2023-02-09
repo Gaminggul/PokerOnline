@@ -1,0 +1,58 @@
+datasource db {
+    provider = "cockroachdb"
+    url      = env("DATABASE_URL")
+}
+
+generator client {
+    provider = "prisma-client-js"
+}
+
+model User {
+    id            String       @id @default(uuid())
+    createdAt     DateTime     @default(now())
+    email         String       @unique
+    password_hash String
+    name          String       @unique
+    role          Role         @default(default)
+    game          Game[]
+    chips         Int
+    friends       User[]       @relation("Friends")
+    friendedBy    User[]       @relation("Friends")
+}
+
+model LoginToken {
+    id        String   @id @default(uuid())
+    createdAt DateTime @default(now())
+    value     String   @unique
+    userId    String
+}
+
+model Player {
+    id          String @id @default(uuid())
+    card1       String
+    card2       String
+    chip_amount Int
+}
+
+model Game {
+    id        String   @id @default(uuid())
+    createdAt DateTime @default(now())
+    player    User[]
+    min_bid   Int
+    max_bid   Int
+    pot       Int
+    cards     String[]
+    access    Access
+    password  String?
+    role_index Int
+}
+
+enum Role {
+    default
+    admin
+}
+
+enum Access {
+    public
+    private
+}
