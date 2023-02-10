@@ -1,39 +1,51 @@
-import Image from "next/image"
-import type { PropsWithChildren } from "react"
+import Image from "next/image";
+import type { PropsWithChildren } from "react";
+import CreateGame from "../../public/creategame.jpg";
+import JoinGame from "../../public/joingame.jpg";
 
 function Play() {
-    return <div className="flex justify-evenly h-screen p-12">
-        <Column>
-            <Image src="/creategame.jpg" alt="creategame.jpg" className="w-[500px] rounded-xl" />
-            <h2 className="p-10 font-bold text-5xl">
-                Create Game
-            </h2>
-            <p className="text-xl">If you want to play a game with your friends,</p>
-            <p className="text-xl p-2">then create a game here!</p>
-            <CAJButton text="Create Game" route="/create"></CAJButton>
-        </Column>
-        <Column>
-            <Image src="/joingame.jpg" alt="joingame.jpg" className="w-[500px] rounded-xl" />
-            <h2 className="p-10 font-bold text-5xl">
-                Join Game
-            </h2>
-            <p className="text-xl">If you want to join a game with your friends</p>
-            <p className="text-xl p-2">or with strangers then join here!</p>
-            <CAJButton text="Join Game" route="/join"></CAJButton>
-        </Column>
+  return (
+    <div className="flex h-screen justify-evenly p-12">
+      <Column>
+        <Image
+          src={CreateGame}
+          alt="creategame.jpg"
+          className="w-[500px] rounded-xl"
+        />
+        <h2 className="p-10 text-5xl font-bold">Create Game</h2>
+        <p className="text-xl">If you want to play a game with your friends,</p>
+        <p className="p-2 text-xl">then create a game here!</p>
+        <CAJButton text="Create Game" route="/create"></CAJButton>
+      </Column>
+      <Column>
+        <Image
+          src={JoinGame}
+          alt="joingame.jpg"
+          className="w-[500px] rounded-xl"
+        />
+        <h2 className="p-10 text-5xl font-bold">Join Game</h2>
+        <p className="text-xl">If you want to join a game with your friends</p>
+        <p className="p-2 text-xl">or with strangers then join here!</p>
+        <CAJButton text="Join Game" route="/join"></CAJButton>
+      </Column>
     </div>
+  );
 }
 
 function Column(props: PropsWithChildren) {
-    return <div className="bg-slate-400 h-full p-12 rounded-3xl flex flex-col items-center">
-        {props.children}
+  return (
+    <div className="flex h-full flex-col items-center rounded-3xl bg-slate-400 p-12">
+      {props.children}
     </div>
+  );
 }
 
-function CAJButton(props: { text: string, route: string }) {
-    return <a href={props.route} className="p-4 bg-green-700 rounded-xl">
-        {props.text}
+function CAJButton(props: { text: string; route: string }) {
+  return (
+    <a href={props.route} className="rounded-xl bg-green-700 p-4">
+      {props.text}
     </a>
+  );
 }
 
-export default Play
+export default Play;

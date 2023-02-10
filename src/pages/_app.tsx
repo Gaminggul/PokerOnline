@@ -56,7 +56,7 @@ function Sidebar() {
 function Profile() {
   const { data: session } = useSession({ required: true })
   return <div>
-    <Image src="/temp.png" alt="Profilepic" />
+    <Image src="/favicon.ico" alt="Profilepic" width={64} height={64}/>
     {session?.user.name}
   </div>
 }
