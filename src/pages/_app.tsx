@@ -28,7 +28,7 @@ function Layout(props: PropsWithChildren<unknown>) {
     return (
         <div className="flex">
             <Sidebar></Sidebar>
-            <main className="min-h-screen w-full overflow-scroll bg-slate-700">
+            <main className="h-screen w-full overflow-scroll bg-slate-700">
                 {props.children}
             </main>
         </div>

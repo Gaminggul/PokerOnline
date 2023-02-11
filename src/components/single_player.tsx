@@ -4,7 +4,7 @@ import type {
     TableStateAction,
     VisualPlayerState,
     VisualTableState,
-} from "../datatypes/table_state";
+} from "../constants/table_state";
 import { error, range } from "functional-utilities";
 import Table from "./table";
 import { create_deck } from "../scripts/create_deck";
@@ -31,7 +31,7 @@ function generate_game(player_amount: number, table_id: string): TableState {
         players,
         centerCards,
         pot: 0,
-        centerRevealAmount: 0,
+        centerRevealAmount: 3,
         currentBet: 0,
         currentPlayerIndex: 0,
         requireBetRound: false,
@@ -97,10 +97,14 @@ function SinglePlayer(props: { tableId: string }) {
         player: TableState["players"][number],
         index: number
     ): VisualPlayerState {
+        const turn = index === tableState.currentPlayerIndex;
         return {
             ...player,
-            you: index === tableState.currentPlayerIndex, // Because it's single player, you are always the current player
-            turn: index === tableState.currentPlayerIndex,
+            you: turn, // Because it's single player, you are always the current player
+            turn,
+            hand: player.folded
+                ? "folded"
+                : player.hand.map((card) => (turn ? card : "hidden")),
         };
     }
     function create_visual_table_state(
