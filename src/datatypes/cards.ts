@@ -1,56 +1,59 @@
-export type CardId = |
-    'clubs_2' |
-    'clubs_3' |
-    'clubs_4' |
-    'clubs_5' |
-    'clubs_6' |
-    'clubs_7' |
-    'clubs_8' |
-    'clubs_9' |
-    'clubs_10' |
-    'clubs_ace' |
-    'clubs_jack' |
-    'clubs_king' |
-    'clubs_queen' |
-    'diamonds_2' |
-    'diamonds_3' |
-    'diamonds_4' |
-    'diamonds_5' |
-    'diamonds_6' |
-    'diamonds_7' |
-    'diamonds_8' |
-    'diamonds_9' |
-    'diamonds_10' |
-    'diamonds_ace' |
-    'diamonds_jack' |
-    'diamonds_king' |
-    'diamonds_queen' |
-    'hearts_2' |
-    'hearts_3' |
-    'hearts_4' |
-    'hearts_5' |
-    'hearts_6' |
-    'hearts_7' |
-    'hearts_8' |
-    'hearts_9' |
-    'hearts_10' |
-    'hearts_ace' |
-    'hearts_jack' |
-    'hearts_king' |
-    'hearts_queen' |
-    'spades_2' |
-    'spades_3' |
-    'spades_4' |
-    'spades_5' |
-    'spades_6' |
-    'spades_7' |
-    'spades_8' |
-    'spades_9' |
-    'spades_10' |
-    'spades_ace' |
-    'spades_jack' |
-    'spades_king' |
-    'spades_queen';
+export const cards = [
+    'clubs_2',
+    'clubs_3',
+    'clubs_4',
+    'clubs_5',
+    'clubs_6',
+    'clubs_7',
+    'clubs_8',
+    'clubs_9',
+    'clubs_10',
+    'clubs_ace',
+    'clubs_jack',
+    'clubs_king',
+    'clubs_queen',
+    'diamonds_2',
+    'diamonds_3',
+    'diamonds_4',
+    'diamonds_5',
+    'diamonds_6',
+    'diamonds_7',
+    'diamonds_8',
+    'diamonds_9',
+    'diamonds_10',
+    'diamonds_ace',
+    'diamonds_jack',
+    'diamonds_king',
+    'diamonds_queen',
+    'hearts_2',
+    'hearts_3',
+    'hearts_4',
+    'hearts_5',
+    'hearts_6',
+    'hearts_7',
+    'hearts_8',
+    'hearts_9',
+    'hearts_10',
+    'hearts_ace',
+    'hearts_jack',
+    'hearts_king',
+    'hearts_queen',
+    'spades_2',
+    'spades_3',
+    'spades_4',
+    'spades_5',
+    'spades_6',
+    'spades_7',
+    'spades_8',
+    'spades_9',
+    'spades_10',
+    'spades_ace',
+    'spades_jack',
+    'spades_king',
+    'spades_queen'
+] as const;
+
+export type CardId = typeof cards[number];
 
 type CombinationId = |
     'royal_flush' |

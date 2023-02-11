@@ -1,7 +1,7 @@
 import type { CardId } from "../datatypes/cards";
 import type {
-    PlayerState,
-    TableState,
+    VisualPlayerState,
+    VisualTableState,
     TableStateAction,
 } from "../datatypes/table_state";
 import { useState } from "react";
@@ -10,7 +10,7 @@ function Table({
     state,
     submit_action,
 }: {
-    state: TableState;
+    state: VisualTableState;
     submit_action: (action: TableStateAction) => void;
 }) {
     const [bet, setBet] = useState(0);
@@ -68,7 +68,7 @@ function Table({
     );
 }
 
-function Player({ player }: { player: PlayerState }) {
+function Player({ player }: { player: VisualPlayerState }) {
     return (
         <div>
             <h3>{player.name}</h3>

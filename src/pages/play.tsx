@@ -2,6 +2,8 @@ import Image from "next/image";
 import type { PropsWithChildren } from "react";
 import CreateGame from "../../public/creategame.jpg";
 import JoinGame from "../../public/joingame.jpg";
+import Link from "next/link";
+import { v4 } from "uuid";
 
 function Play() {
     return (
@@ -32,6 +34,11 @@ function Play() {
                 <p className="p-2 text-xl">or with strangers then join here!</p>
                 <CAJButton text="Join Game" route="/join"></CAJButton>
             </Column>
+            <Column>
+                <h2>Play Alone</h2>
+                <p>This is just to test the game</p>
+                <CAJButton text="Play Alone" route={`/lobby/${v4()}`}></CAJButton>
+            </Column>
         </div>
     );
 }
@@ -46,9 +53,9 @@ function Column(props: PropsWithChildren) {
 
 function CAJButton(props: { text: string; route: string }) {
     return (
-        <a href={props.route} className="rounded-xl bg-green-700 p-4">
+        <Link href={props.route} className="rounded-xl bg-green-700 p-4">
             {props.text}
-        </a>
+        </Link>
     );
 }
 

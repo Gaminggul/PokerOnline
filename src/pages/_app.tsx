@@ -26,14 +26,11 @@ const MyApp: AppType<{ session: Session | null }> = ({
 
 function Layout(props: PropsWithChildren<unknown>) {
     return (
-        <div>
+        <div className="flex">
             <Sidebar></Sidebar>
-            <div className="flex">
-                <div className="w-1/12" />
-                <main className="min-h-screen w-full bg-slate-700">
-                    {props.children}
-                </main>
-            </div>
+            <main className="min-h-screen w-full overflow-scroll bg-slate-700">
+                {props.children}
+            </main>
         </div>
     );
 }
@@ -48,7 +45,7 @@ function SidebarButton(props: { text: string }) {
 
 function Sidebar() {
     return (
-        <div className="fixed flex h-full w-1/12 flex-col items-stretch gap-3 bg-slate-900 text-2xl text-white">
+        <div className="flex h-screen w-1/12 min-w-[100px] flex-col items-stretch gap-3 bg-slate-900 text-2xl text-white">
             <Profile />
             <Link href="/">
                 <SidebarButton text="Home" />
