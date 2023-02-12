@@ -6,7 +6,7 @@ function Lobby() {
     const { game_id } = router.query;
 
     return (
-        <div>
+        <div className="p-8">
             {game_id && typeof game_id === "string" ? (
                 <SinglePlayer tableId={game_id} />
             ) : (

@@ -32,8 +32,8 @@ function Table({
     const you_index = state.players.findIndex((player) => player.you);
     return (
         <div className="flex w-full flex-col gap-8">
-            <h2>Table ID: {state.tableId}</h2>
-            <div className="flex justify-center gap-4">
+            <p className="text-xs text-gray-800">Table ID: {state.tableId}</p>
+            <div className="flex justify-center gap-4 rounded-lg bg-slate-600 p-6">
                 {state.centerCards.map((card, i) => {
                     return (
                         <div key={i}>
@@ -42,106 +42,88 @@ function Table({
                     );
                 })}
             </div>
-            <div className="flex justify-center">
-                <div className="flex flex-col items-center">
-                    <div>
-                        <p>Your combinations</p>
-                        <div className="flex gap-2">
-                            {(() => {
-                                const hand = state.players[you_index]?.hand;
-                                if (hand === "folded") {
-                                    return <p>Folded</p>;
+            <div className="flex items-center justify-evenly">
+                {(() => {
+                    const hand = state.players[you_index]?.hand;
+                    if (hand === "folded") {
+                        return <p>Folded</p>;
+                    }
+                    if (hand) {
+                        const combination = get_combination(
+                            hand.concat(
+                                state.centerCards.filter(
+                                    (card) => card !== "hidden"
+                                )
+                            )
+                        );
+                        if (combination.type === "some") {
+                            return (
+                                <div className="rounded-md bg-slate-600 p-4">
+                                    <p>Your combinations</p>
+                                    <p>Type: {combination.combination}</p>
+                                    <p>Base Score: {combination.base_score}</p>
+                                    <p>Score: {combination.score}</p>
+                                    <p>
+                                        Cards:{" "}
+                                        {combination.cards
+                                            .map((card) => card)
+                                            .join(", ")}
+                                    </p>
+                                </div>
+                            );
+                        }
+                    }
+                })()}
+                {state.players[you_index]?.turn ? (
+                    <div className="flex items-center gap-8 rounded-md bg-slate-600 p-4">
+                        <UiButton
+                            onClick={() => submit_action({ type: "fold" })}
+                        >
+                            Fold
+                        </UiButton>
+                        <div className="flex items-center gap-4">
+                            <div>
+                                <p>Min bet is {min_bet}</p>
+                                <input
+                                    type="text"
+                                    value={betInput}
+                                    onChange={(e) => {
+                                        setBetInput(e.target.value);
+                                        const bet = parseInt(e.target.value);
+                                        if (!isNaN(bet)) {
+                                            setBet(bet);
+                                        }
+                                    }}
+                                />
+                            </div>
+                            <UiButton
+                                onClick={() =>
+                                    submit_action({
+                                        type: "bet",
+                                        bet,
+                                    })
                                 }
-                                if (hand) {
-                                    const combination = get_combination(
-                                        hand.concat(
-                                            state.centerCards.filter(
-                                                (card) => card !== "hidden"
-                                            )
-                                        )
-                                    );
-                                    if (combination.type === "some") {
-                                        return (
-                                            <div>
-                                                <p>
-                                                    Type:{" "}
-                                                    {combination.combination}
-                                                </p>
-                                                <p>
-                                                    Base Score:{" "}
-                                                    {combination.base_score}
-                                                </p>
-                                                <p>
-                                                    Score: {combination.score}
-                                                </p>
-                                                <p>
-                                                    Cards:{" "}
-                                                    {combination.cards
-                                                        .map((card) => card)
-                                                        .join(", ")}
-                                                </p>
-                                            </div>
-                                        );
-                                    }
-                                }
-                            })()}
+                                locked={bet < min_bet || !parseInt(betInput)}
+                            >
+                                Bet
+                            </UiButton>
+                            {bet < min_bet && !isNaN(parseInt(betInput)) ? (
+                                <p className="text-red-500">
+                                    Bet must be at least {min_bet}
+                                </p>
+                            ) : null}
+                            {!isNaN(parseInt(betInput)) ? null : (
+                                <p className="text-red-500">
+                                    Bet must be a number
+                                </p>
+                            )}
                         </div>
                     </div>
-                    {state.players[you_index]?.turn ? (
-                        <div className="flex items-center gap-8 ">
-                            <UiButton
-                                onClick={() => submit_action({ type: "fold" })}
-                            >
-                                Fold
-                            </UiButton>
-                            <div className="flex items-center gap-4">
-                                <div>
-                                    <p>Min bet is {min_bet}</p>
-                                    <input
-                                        type="text"
-                                        value={betInput}
-                                        onChange={(e) => {
-                                            setBetInput(e.target.value);
-                                            const bet = parseInt(
-                                                e.target.value
-                                            );
-                                            if (!isNaN(bet)) {
-                                                setBet(bet);
-                                            }
-                                        }}
-                                    />
-                                </div>
-                                <UiButton
-                                    onClick={() =>
-                                        submit_action({
-                                            type: "bet",
-                                            bet,
-                                        })
-                                    }
-                                    locked={
-                                        bet < min_bet || !parseInt(betInput)
-                                    }
-                                >
-                                    Bet
-                                </UiButton>
-                                {bet < min_bet && !isNaN(parseInt(betInput)) ? (
-                                    <p className="text-red-500">
-                                        Bet must be at least {min_bet}
-                                    </p>
-                                ) : null}
-                                {!isNaN(parseInt(betInput)) ? null : (
-                                    <p className="text-red-500">
-                                        Bet must be a number
-                                    </p>
-                                )}
-                            </div>
-                        </div>
-                    ) : (
-                        <p>Not your turn</p>
-                    )}
-                </div>
+                ) : (
+                    <p>Not your turn</p>
+                )}
             </div>
-            <div className="flex justify-between">
+            <div className="flex justify-evenly">
                 {state.players.map((player, i) => {
                     return (
                         <div key={i}>
@@ -186,7 +168,7 @@ function UiButton({
 
 function Player({ player }: { player: VisualPlayerState }) {
     return (
-        <div>
+        <div className="rounded-md bg-slate-600 p-4">
             <h3>{player.you ? `${player.name} - You` : player.name}</h3>
             <p>Bet: {player.bet}</p>
             <p>Chips: {player.remainingChips}</p>

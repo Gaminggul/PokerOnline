@@ -150,7 +150,6 @@ function SinglePlayer(props: { tableId: string }) {
     };
 
     const next_center = () => {
-        console.log("next center");
         setTableState((draft) => {
             draft.centerRevealAmount++;
             if (draft.centerRevealAmount === 6) {
@@ -232,10 +231,10 @@ function SinglePlayer(props: { tableId: string }) {
                 submit_action={action_handler}
                 state={create_visual_table_state(tableState)}
             />
-            <div className="w-[300px] text-xs">
+            {/* <div className="w-[300px] text-xs">
                 <p>State</p>
                 <pre>{JSON.stringify(tableState, null, 2)}</pre>
-            </div>
+            </div> */}
         </div>
     );
 }
