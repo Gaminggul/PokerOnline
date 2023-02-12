@@ -27,6 +27,7 @@
         "next": "13.1.6",
         "next-auth": "^4.19.2",
         "react": "18.2.0",
+        "react-device-detect": "^2.2.3",
         "react-dom": "18.2.0",
         "superjson": "1.9.1",
         "use-immer": "^0.8.1",

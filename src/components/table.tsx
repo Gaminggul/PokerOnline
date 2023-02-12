@@ -5,9 +5,10 @@ import type {
     VisualTableState,
     TableStateAction,
 } from "../scripts/table_state";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { max } from "lodash-es";
 import { error } from "functional-utilities";
+import { isFirefox } from "react-device-detect";
 
 function Table({
     state,
@@ -189,16 +190,40 @@ function Player({ player }: { player: VisualPlayerState }) {
     );
 }
 
-function Card(props: { card: CardId | "hidden"; width: number }) {
+function Card({ card, width }: { card: CardId | "hidden"; width: number }) {
+    const [currentCard, setCurrentCard] = useState(card);
+    const [animationTransform, setAnimationTransform] = useState(0);
+    const time = 400;
+    useEffect(() => {
+        if (!isFirefox) {
+            if (card !== currentCard) {
+                setAnimationTransform(1);
+                setTimeout(() => {
+                    setCurrentCard(card);
+                    setAnimationTransform(0);
+                }, time);
+            }
+        } else {
+            setCurrentCard(card);
+        }
+    }, [card, currentCard, width]);
     const ratio = 333 / 234;
-    const height = props.width * ratio;
+    const height = width * ratio;
     return (
-        <Image
-            src={`/cards/${props.card}.svg`}
-            alt={props.card}
-            width={props.width}
-            height={height}
-        />
+        <div
+            style={{
+                transform: `rotateY(${animationTransform * 90}deg)`,
+                transitionDuration: `${time}ms`,
+            }}
+            className="transition-transform"
+        >
+            <Image
+                src={`/cards/${currentCard}.svg`}
+                alt={card}
+                width={width}
+                height={height}
+            />
+        </div>
     );
 }
 
