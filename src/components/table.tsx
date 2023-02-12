@@ -1,10 +1,10 @@
 import Image from "next/image";
-import type { CardId } from "../constants/cards";
+import { type CardId, get_combination } from "../scripts/cards";
 import type {
     VisualPlayerState,
     VisualTableState,
     TableStateAction,
-} from "../constants/table_state";
+} from "../scripts/table_state";
 import { useState } from "react";
 
 function Table({
@@ -27,7 +27,7 @@ function Table({
     }
     const you_index = state.players.findIndex((player) => player.you);
     return (
-        <div className="flex flex-col gap-8">
+        <div className="flex w-full flex-col gap-8">
             <h2>Table ID: {state.tableId}</h2>
             <div className="flex justify-center gap-4">
                 {state.centerCards.map((card, i) => {
@@ -39,39 +39,84 @@ function Table({
                 })}
             </div>
             <div className="flex justify-center">
-                {state.players[you_index]?.turn ? (
-                    <div className="flex items-center gap-8 ">
-                        <UiButton
-                            onClick={() => submit_action({ type: "fold" })}
-                        >
-                            Fold
-                        </UiButton>
-                        <div className="flex items-center gap-4">
-                            <div>
-                                <p>Min bet is {min_bet}</p>
-                                <input
-                                    type="number"
-                                    value={bet}
-                                    onChange={(e) =>
-                                        setBet(Number(e.target.value))
-                                    }
-                                />
-                            </div>
-                            <UiButton
-                                onClick={() =>
-                                    submit_action({
-                                        type: "bet",
-                                        bet,
-                                    })
+                <div className="flex flex-col items-center">
+                    <div>
+                        <p>Your combinations</p>
+                        <div className="flex gap-2">
+                            {(() => {
+                                const hand = state.players[you_index]?.hand;
+                                if (hand === "folded") {
+                                    return <p>Folded</p>;
                                 }
-                            >
-                                Bet
-                            </UiButton>
+                                if (hand) {
+                                    const combination = get_combination(
+                                        hand.concat(
+                                            state.centerCards.filter(
+                                                (card) => card !== "hidden"
+                                            )
+                                        )
+                                    );
+                                    if (combination.type === "some") {
+                                        return (
+                                            <div>
+                                                <p>
+                                                    Type:{" "}
+                                                    {combination.combination}
+                                                </p>
+                                                <p>
+                                                    Base Score:{" "}
+                                                    {combination.base_score}
+                                                </p>
+                                                <p>
+                                                    Score: {combination.score}
+                                                </p>
+                                                <p>
+                                                    Cards:{" "}
+                                                    {combination.cards
+                                                        .map((card) => card)
+                                                        .join(", ")}
+                                                </p>
+                                            </div>
+                                        );
+                                    }
+                                }
+                            })()}
                         </div>
                     </div>
-                ) : (
-                    <p>Not your turn</p>
-                )}
+                    {state.players[you_index]?.turn ? (
+                        <div className="flex items-center gap-8 ">
+                            <UiButton
+                                onClick={() => submit_action({ type: "fold" })}
+                            >
+                                Fold
+                            </UiButton>
+                            <div className="flex items-center gap-4">
+                                <div>
+                                    <p>Min bet is {min_bet}</p>
+                                    <input
+                                        type="number"
+                                        value={bet}
+                                        onChange={(e) =>
+                                            setBet(Number(e.target.value))
+                                        }
+                                    />
+                                </div>
+                                <UiButton
+                                    onClick={() =>
+                                        submit_action({
+                                            type: "bet",
+                                            bet,
+                                        })
+                                    }
+                                >
+                                    Bet
+                                </UiButton>
+                            </div>
+                        </div>
+                    ) : (
+                        <p>Not your turn</p>
+                    )}
+                </div>
             </div>
             <div className="flex justify-between">
                 {state.players.map((player, i) => {

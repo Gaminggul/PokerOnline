@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   width="59.316998mm"
+   height="86.965118mm"
+   viewBox="0 0 59.316998 86.965118"
+   version="1.1"
+   id="svg5"
+   inkscape:version="1.2.2 (b0a8486541, 2022-12-01)"
+   sodipodi:docname="hidden.svg"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <sodipodi:namedview
+     id="namedview7"
+     pagecolor="#ffffff"
+     bordercolor="#000000"
+     borderopacity="0.25"
+     inkscape:showpageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#d1d1d1"
+     inkscape:document-units="mm"
+     showgrid="false"
+     inkscape:zoom="0.76078844"
+     inkscape:cx="29.574582"
+     inkscape:cy="236.59665"
+     inkscape:window-width="1920"
+     inkscape:window-height="1007"
+     inkscape:window-x="1920"
+     inkscape:window-y="0"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="layer1" />
+  <defs
+     id="defs2" />
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1"
+     transform="translate(-51.46006,-65.371071)">
+    <rect
+       style="fill:#ffffff;fill-opacity:1;stroke:#000000;stroke-width:1.041;stroke-linecap:butt;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1"
+       id="rect1370"
+       width="58.275997"
+       height="85.924118"
+       x="51.98056"
+       y="65.891571" />
+    <text
+       xml:space="preserve"
+       style="font-weight:bold;font-size:13.7537px;font-family:sans-serif;-inkscape-font-specification:'sans-serif Bold';text-align:center;text-anchor:middle;fill:#000000;fill-opacity:1;stroke-width:1.14614"
+       x="81.473938"
+       y="87.085258"
+       id="text290"><tspan
+         sodipodi:role="line"
+         id="tspan288"
+         style="fill:#000000;fill-opacity:1;stroke-width:1.14614"
+         x="81.473938"
+         y="87.085258">Hidden</tspan><tspan
+         sodipodi:role="line"
+         style="fill:#000000;fill-opacity:1;stroke-width:1.14614"
+         x="81.473938"
+         y="104.27738"
+         id="tspan1316">Card</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-weight:bold;font-size:4.59598px;font-family:sans-serif;-inkscape-font-specification:'sans-serif Bold';text-align:center;text-anchor:middle;fill:#000000;fill-opacity:1;stroke-width:1.35907"
+       x="81.319855"
+       y="124.20827"
+       id="text1894"><tspan
+         sodipodi:role="line"
+         style="font-size:4.59598px;fill:#000000;fill-opacity:1;stroke-width:1.35907"
+         x="81.319855"
+         y="124.20827"
+         id="tspan1892">this should be replaced</tspan><tspan
+         sodipodi:role="line"
+         style="font-size:4.59598px;fill:#000000;fill-opacity:1;stroke-width:1.35907"
+         x="81.319855"
+         y="129.95325"
+         id="tspan1898">hidden.svg</tspan><tspan
+         sodipodi:role="line"
+         style="font-size:4.59598px;fill:#000000;fill-opacity:1;stroke-width:1.35907"
+         x="81.319855"
+         y="135.69821"
+         id="tspan1900" /><tspan
+         sodipodi:role="line"
+         style="font-size:4.59598px;fill:#000000;fill-opacity:1;stroke-width:1.35907"
+         x="81.319855"
+         y="141.44319"
+         id="tspan1902">probably a backside</tspan><tspan
+         sodipodi:role="line"
+         style="font-size:4.59598px;fill:#000000;fill-opacity:1;stroke-width:1.35907"
+         x="81.319855"
+         y="147.18817"
+         id="tspan1904">of a card</tspan></text>
+  </g>
+</svg>

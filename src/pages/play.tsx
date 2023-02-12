@@ -37,7 +37,10 @@ function Play() {
             <Column>
                 <h2>Play Alone</h2>
                 <p>This is just to test the game</p>
-                <CAJButton text="Play Alone" route={`/lobby/${v4()}`}></CAJButton>
+                <CAJButton
+                    text="Play Alone"
+                    route={`/lobby/${v4()}`}
+                ></CAJButton>
             </Column>
         </div>
     );

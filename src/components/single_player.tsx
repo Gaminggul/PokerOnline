@@ -1,13 +1,15 @@
 import { useImmer } from "use-immer";
 import type {
+    PlayerState,
     TableState,
     TableStateAction,
     VisualPlayerState,
     VisualTableState,
-} from "../constants/table_state";
+} from "../scripts/table_state";
 import { error, range } from "functional-utilities";
 import Table from "./table";
 import { create_deck } from "../scripts/create_deck";
+import { type CardId } from "../scripts/cards";
 
 function generate_game(player_amount: number, table_id: string): TableState {
     const deck = create_deck();
@@ -19,13 +21,21 @@ function generate_game(player_amount: number, table_id: string): TableState {
         return {
             name: `Player ${i + 1}`,
             bet: 0,
+            //hand: ["clubs_3", "clubs_4"],
             hand: deck.splice(0, 2),
             remainingChips: 100,
             folded: false,
-        };
+        } satisfies PlayerState;
     });
 
-    const centerCards = deck.splice(0, 5);
+    const centerCards: CardId[] = deck.splice(0, 5);
+    // [
+    //     "clubs_5",
+    //     "clubs_6",
+    //     "clubs_7",
+    //     "spades_7",
+    //     "spades_9",
+    // ];
 
     return {
         players,
@@ -47,7 +57,15 @@ function SinglePlayer(props: { tableId: string }) {
     const [tableState, setTableState] = useImmer<TableState>(
         generate_game(player_amount, props.tableId)
     );
+    const min_bet = tableState.players.reduce((min, player) => {
+        if (player.bet > min) {
+            return player.bet;
+        } else {
+            return min;
+        }
+    }, 0);
     const next_center = () => {
+        console.log("next center");
         setTableState((draft) => {
             draft.centerRevealAmount++;
             if (draft.centerRevealAmount === 6) {
@@ -64,9 +82,11 @@ function SinglePlayer(props: { tableId: string }) {
     const next_player = () => {
         setTableState((draft) => {
             if (draft.requireBetRound) {
-                draft.requireBetRound = false;
                 draft.currentPlayerIndex =
                     (draft.currentPlayerIndex + 1) % draft.players.length;
+                if (draft.currentPlayerIndex === 0) {
+                    draft.requireBetRound = false;
+                }
             } else {
                 draft.currentPlayerIndex =
                     (draft.currentPlayerIndex + 1) % draft.players.length;
@@ -83,15 +103,17 @@ function SinglePlayer(props: { tableId: string }) {
                     draft.players[draft.currentPlayerIndex] ??
                     error("Current player is undefined")
                 ).bet = action.bet;
-                draft.requireBetRound = true;
+                if (draft.currentPlayerIndex !== 0 && action.bet > min_bet) {
+                    draft.requireBetRound = true;
+                }
             } else if (action.type === "fold") {
                 (
                     draft.players[draft.currentPlayerIndex] ??
                     error("Current player is undefined")
                 ).folded = true;
             }
-            next_player();
         });
+        next_player();
     }
     function create_visual_player_state(
         player: TableState["players"][number],
@@ -122,10 +144,16 @@ function SinglePlayer(props: { tableId: string }) {
     }
 
     return (
-        <Table
-            submit_action={action_handler}
-            state={create_visual_table_state(tableState)}
-        />
+        <div className="flex w-full">
+            <Table
+                submit_action={action_handler}
+                state={create_visual_table_state(tableState)}
+            />
+            <div className="w-[300px] text-xs">
+                <p>State</p>
+                <pre>{JSON.stringify(tableState, null, 2)}</pre>
+            </div>
+        </div>
     );
 }
 

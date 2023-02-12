@@ -16,12 +16,14 @@ export interface VisualPlayerState {
     hand: (CardId | "hidden")[] | "folded";
 }
 
-export type TableStateAction = {
-    type: "fold";
-} | {
-    type: "bet";
-    bet: number;
-}
+export type TableStateAction =
+    | {
+          type: "fold";
+      }
+    | {
+          type: "bet";
+          bet: number;
+      };
 
 export interface TableState {
     tableId: string;
