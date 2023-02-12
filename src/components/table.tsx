@@ -22,7 +22,7 @@ function Table({
     const min_bet =
         max([
             state.players.reduce((min, player) => {
-                if (player.bet < min) {
+                if (player.bet > min) {
                     return player.bet;
                 } else {
                     return min;

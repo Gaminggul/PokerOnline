@@ -158,23 +158,40 @@ function compute_next_state(
 
     {
         if (action.type === "bet") {
-            current_player_ref(state, playerData).state_ref.bet = action.bet;
             if (state.currentPlayerIndex !== 0 && action.bet > min_bet(state)) {
                 state.requireBetRound = true;
             }
+            current_player_ref(state, playerData).state_ref.bet = action.bet;
         } else if (action.type === "fold") {
             current_player_ref(state, playerData).state_ref.folded = true;
         }
     }
 
-    {
-        state.currentPlayerIndex =
-            (state.currentPlayerIndex + 1) % state.players.length;
-        if (state.currentPlayerIndex === 0) {
-            ({ state, playerData } = compute_next_center(state, playerData));
-        }
+    ({ state, playerData } = compute_next_player(state, playerData));
+    while (
+        current_player_ref(state, playerData).state_ref.folded &&
+        !state.end_of_round
+    ) {
+        ({ state, playerData } = compute_next_player(state, playerData));
     }
 
+    return { state, playerData };
+}
+
+function compute_next_player(
+    originalState: Readonly<TableState>,
+    originalPlayerData: Readonly<PlayerData[]>
+): {
+    state: TableState;
+    playerData: PlayerData[];
+} {
+    let state = cloneDeep(originalState) as TableState;
+    let playerData = cloneDeep(originalPlayerData) as PlayerData[];
+    state.currentPlayerIndex =
+        (state.currentPlayerIndex + 1) % state.players.length;
+    if (state.currentPlayerIndex === 0) {
+        ({ state, playerData } = compute_next_center(state, playerData));
+    }
     return { state, playerData };
 }
 
@@ -216,7 +233,10 @@ function compute_end_of_round(
     const winners = get_winners(state);
     if (winners) {
         // take away the bet from the players
-        state.players.forEach((player) => {
+        const active_players = state.players.filter(
+            (player) => !player.folded
+        );
+        active_players.forEach((player) => {
             player_name_ref(
                 state,
                 playerData,
@@ -224,7 +244,7 @@ function compute_end_of_round(
             ).player_data_ref.remainingChips -= player.bet;
         });
         // give the pot to the winners
-        const pot = sum(state.players.map((player) => player.bet));
+        const pot = sum(active_players.map((player) => player.bet));
         const winner_pot = pot / winners.length;
         winners.forEach((winner) => {
             player_name_ref(
@@ -297,10 +317,10 @@ function SinglePlayer(props: { tableId: string }) {
                 submit_action={action_handler}
                 state={create_visual_table_state(tableState)}
             />
-            <div className="w-[300px] text-xs">
+            {/* <div className="w-[300px] text-xs">
                 <p>State</p>
                 <pre>{JSON.stringify(tableState, null, 2)}</pre>
-            </div>
+            </div> */}
         </div>
     );
 }
