@@ -152,11 +152,9 @@ function compute_next_state(
 ): {
     state: TableState;
     playerData: PlayerData[];
-    end_of_round: boolean;
 } {
     let state = cloneDeep(originalState) as TableState;
-    const playerData = cloneDeep(originalPlayerData) as PlayerData[];
-    let end_of_round = false;
+    let playerData = cloneDeep(originalPlayerData) as PlayerData[];
 
     {
         if (action.type === "bet") {
@@ -173,11 +171,11 @@ function compute_next_state(
         state.currentPlayerIndex =
             (state.currentPlayerIndex + 1) % state.players.length;
         if (state.currentPlayerIndex === 0) {
-            ({ state, end_of_round } = compute_next_center(state, playerData));
+            ({ state, playerData } = compute_next_center(state, playerData));
         }
     }
 
-    return { state, playerData, end_of_round };
+    return { state, playerData };
 }
 
 function compute_next_center(
@@ -186,11 +184,9 @@ function compute_next_center(
 ): {
     state: TableState;
     playerData: PlayerData[];
-    end_of_round: boolean;
 } {
     let state = cloneDeep(originalState) as TableState;
     let playerData = cloneDeep(originalPlayerData) as PlayerData[];
-    let end_of_round = false;
     if (state.requireBetRound) {
         state.requireBetRound = false;
     } else {
@@ -198,10 +194,9 @@ function compute_next_center(
         if (state.centerRevealAmount === 6) {
             state.centerRevealAmount = 5;
             ({ state, playerData } = compute_end_of_round(state, playerData));
-            end_of_round = true;
         }
     }
-    return { state, playerData, end_of_round };
+    return { state, playerData };
 }
 
 // setTimeout(() => {
@@ -252,14 +247,11 @@ function SinglePlayer(props: { tableId: string }) {
         generate_game(playerData, props.tableId)
     );
     function action_handler(action: TableStateAction) {
-        const {
-            state: new_state,
-            playerData: new_player_data,
-            end_of_round,
-        } = compute_next_state(tableState, playerData, action);
+        const { state: new_state, playerData: new_player_data } =
+            compute_next_state(tableState, playerData, action);
         setTableState(new_state);
         setPlayerData(new_player_data);
-        if (end_of_round) {
+        if (new_state.end_of_round) {
             setTimeout(() => {
                 setTableState(() => generate_game(playerData, props.tableId));
             }, 3000);
