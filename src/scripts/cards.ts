@@ -81,7 +81,10 @@ function longest_consecutive_sequence(arr: number[]): number[] {
     let longest: number[] = [];
     let current: number[] = [];
     for (const num of arr) {
-        if (current.length === 0 || num === (current.at(-1) ?? error("out of bounds")) + 1) {
+        if (
+            current.length === 0 ||
+            num === (current.at(-1) ?? error("out of bounds")) + 1
+        ) {
             current.push(num);
         } else {
             if (current.length > longest.length) {
@@ -98,12 +101,12 @@ function longest_consecutive_sequence(arr: number[]): number[] {
 
 type CombinationEvaluator = (cards: CardId[]) =>
     | {
-        type: "some";
-        score: number; // This is used for tie-breaking
-    }
+          type: "some";
+          score: number; // This is used for tie-breaking
+      }
     | {
-        type: "none";
-    };
+          type: "none";
+      };
 
 interface Combination {
     id: CombinationId;
@@ -126,9 +129,9 @@ function rank_evaluate(rank_amounts: number[]): CombinationEvaluator {
         );
         let score = 0;
         for (const rank_amount of sorted_rank_amounts) {
-            const valid_ranks = remaining_sorted_ranks.map((v, i) => [i, v] as const).filter(
-                ([, entry]) => entry[1].length >= rank_amount
-            );
+            const valid_ranks = remaining_sorted_ranks
+                .map((v, i) => [i, v] as const)
+                .filter(([, entry]) => entry[1].length >= rank_amount);
             if (valid_ranks.length === 0) {
                 return {
                     type: "none",
@@ -137,7 +140,8 @@ function rank_evaluate(rank_amounts: number[]): CombinationEvaluator {
             const best_rank =
                 maxBy(
                     valid_ranks.map(
-                        (v) => [v[0], get_rank_score(v[1][0])] as [number, number]
+                        (v) =>
+                            [v[0], get_rank_score(v[1][0])] as [number, number]
                     ),
                     ([, score]) => score
                 ) ?? error("No best rank");
@@ -309,17 +313,19 @@ export const combinations = [
 
 export type CombinationResult =
     | {
-        type: "some";
-        combination: CombinationId;
-        cards: CardId[];
-        base_score: number;
-        score: number;
-    }
+          type: "some";
+          combination: CombinationId;
+          cards: CardId[];
+          base_score: number;
+          score: number;
+      }
     | {
-        type: "none";
-    };
+          type: "none";
+      };
 
-export function get_combination(cards: (CardId | "hidden")[]): CombinationResult {
+export function get_combination(
+    cards: (CardId | "hidden")[]
+): CombinationResult {
     if (cards.length === 0 || cards.some((card) => card === "hidden")) {
         return {
             type: "none",
@@ -338,10 +344,10 @@ export function get_combination(cards: (CardId | "hidden")[]): CombinationResult
             };
         })
         .filter((v) => v !== undefined) as {
-            combination: CombinationId;
-            score: number;
-            base_score: number;
-        }[];
+        combination: CombinationId;
+        score: number;
+        base_score: number;
+    }[];
     if (combinations_with_cards.length === 0) {
         return {
             type: "none",

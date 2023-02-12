@@ -17,12 +17,12 @@ export interface VisualPlayerState {
 
 export type TableStateAction =
     | {
-        type: "fold";
-    }
+          type: "fold";
+      }
     | {
-        type: "bet";
-        bet: number;
-    };
+          type: "bet";
+          bet: number;
+      };
 
 export interface TableState {
     tableId: string;
