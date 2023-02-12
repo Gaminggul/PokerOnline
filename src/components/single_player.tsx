@@ -1,4 +1,3 @@
-import { useImmer } from "use-immer";
 import type {
     PlayerState,
     TableState,
@@ -10,7 +9,8 @@ import { error } from "functional-utilities";
 import Table from "./table";
 import { create_deck } from "../scripts/create_deck";
 import { get_combination, type CardId } from "../scripts/cards";
-import { max } from "lodash-es";
+import { cloneDeep, max, sum } from "lodash-es";
+import { useState } from "react";
 
 interface PlayerData {
     name: string;
@@ -52,7 +52,7 @@ function generate_game(
         currentBet: 0,
         currentPlayerIndex: 0,
         requireBetRound: false,
-        revealed: false,
+        end_of_round: false,
         deck,
         tableId: table_id,
     };
@@ -89,18 +89,10 @@ function get_winners(state: TableState): PlayerState[] | undefined {
     }
 }
 
-function SinglePlayer(props: { tableId: string }) {
-    const [player_data, setPlayerData] = useImmer<PlayerData[]>([
-        { name: "Player 1", remainingChips: 100 },
-        { name: "Player 2", remainingChips: 100 },
-        { name: "Player 3", remainingChips: 100 },
-    ]);
-    const [tableState, setTableState] = useImmer<TableState>(
-        generate_game(player_data, props.tableId)
-    );
-    const min_bet =
+function min_bet(state: Readonly<TableState>): number {
+    return (
         max([
-            tableState.players.reduce((min, player) => {
+            state.players.reduce((min, player) => {
                 if (player.bet > min) {
                     return player.bet;
                 } else {
@@ -108,91 +100,170 @@ function SinglePlayer(props: { tableId: string }) {
                 }
             }, 1),
             1,
-        ]) ?? error("Min bet is undefined");
-    const end_of_round = () => {
-        setTableState((draft) => {
-            draft.centerRevealAmount = 5;
-            draft.revealed = true;
-            setTimeout(() => {
-                setTableState(() => generate_game(player_data, props.tableId));
-            }, 5000);
-        });
-        setPlayerData((player_draft) => {
-            const winners = get_winners(tableState);
-            const player_map = player_draft.reduce((map, player) => {
-                map[player.name] = player;
-                return map;
-            }, {} as Record<string, PlayerData>);
-            if (winners) {
-                // take away the bet from the players
-                tableState.players.forEach((player) => {
-                    const player_data = player_map[player.name];
-                    if (player_data) {
-                        player_data.remainingChips -= player.bet;
-                    }
-                });
-                // give the pot to the winners
-                const pot = tableState.players.reduce(
-                    (sum, player) => sum + player.bet,
-                    0
-                );
-                const winner_pot = pot / winners.length;
-                winners.forEach((winner) => {
-                    const player = player_draft.find(
-                        (player) => player.name === winner.name
-                    );
-                    if (player) {
-                        player.remainingChips += winner_pot;
-                    }
-                });
-            }
-        });
-    };
+        ]) ?? error("Min bet is undefined")
+    );
+}
 
-    const next_center = () => {
-        setTableState((draft) => {
-            draft.centerRevealAmount++;
-            if (draft.centerRevealAmount === 6) {
-                draft.centerRevealAmount = 5;
-                end_of_round();
+function current_player_ref(
+    state: TableState,
+    player_data: PlayerData[]
+): {
+    state_ref: PlayerState;
+    player_data_ref: PlayerData;
+} {
+    const player_state = state.players[state.currentPlayerIndex];
+    if (!player_state) {
+        throw new Error("Current player is undefined");
+    }
+    const player_data_ref = player_data.find(
+        (player) => player.name === player_state.name
+    );
+    if (!player_data_ref) {
+        throw new Error("Player data is undefined");
+    }
+    return { state_ref: player_state, player_data_ref };
+}
+
+function player_name_ref(
+    state: TableState,
+    playerData: PlayerData[],
+    name: string
+): {
+    state_ref: PlayerState;
+    player_data_ref: PlayerData;
+} {
+    const player_state = state.players.find((player) => player.name === name);
+    if (!player_state) {
+        throw new Error("Current player is undefined");
+    }
+    const player_data_ref = playerData.find(
+        (player) => player.name === player_state.name
+    );
+    if (!player_data_ref) {
+        throw new Error("Player data is undefined");
+    }
+    return { state_ref: player_state, player_data_ref };
+}
+
+function compute_next_state(
+    originalState: Readonly<TableState>,
+    originalPlayerData: Readonly<PlayerData[]>,
+    action: Readonly<TableStateAction>
+): {
+    state: TableState;
+    playerData: PlayerData[];
+    end_of_round: boolean;
+} {
+    let state = cloneDeep(originalState) as TableState;
+    const playerData = cloneDeep(originalPlayerData) as PlayerData[];
+    let end_of_round = false;
+
+    {
+        if (action.type === "bet") {
+            current_player_ref(state, playerData).state_ref.bet = action.bet;
+            if (state.currentPlayerIndex !== 0 && action.bet > min_bet(state)) {
+                state.requireBetRound = true;
             }
+        } else if (action.type === "fold") {
+            current_player_ref(state, playerData).state_ref.folded = true;
+        }
+    }
+
+    {
+        state.currentPlayerIndex =
+            (state.currentPlayerIndex + 1) % state.players.length;
+        if (state.currentPlayerIndex === 0) {
+            ({ state, end_of_round } = compute_next_center(state, playerData));
+        }
+    }
+
+    return { state, playerData, end_of_round };
+}
+
+function compute_next_center(
+    originalState: Readonly<TableState>,
+    originalPlayerData: Readonly<PlayerData[]>
+): {
+    state: TableState;
+    playerData: PlayerData[];
+    end_of_round: boolean;
+} {
+    let state = cloneDeep(originalState) as TableState;
+    let playerData = cloneDeep(originalPlayerData) as PlayerData[];
+    let end_of_round = false;
+    if (state.requireBetRound) {
+        state.requireBetRound = false;
+    } else {
+        state.centerRevealAmount++;
+        if (state.centerRevealAmount === 6) {
+            state.centerRevealAmount = 5;
+            ({ state, playerData } = compute_end_of_round(state, playerData));
+            end_of_round = true;
+        }
+    }
+    return { state, playerData, end_of_round };
+}
+
+// setTimeout(() => {
+//     setTableState(() => generate_game(playerData, props.tableId));
+// }, 5000);
+
+function compute_end_of_round(
+    originalState: Readonly<TableState>,
+    originalPlayerData: Readonly<PlayerData[]>
+): { state: TableState; playerData: PlayerData[] } {
+    const state = cloneDeep(originalState) as TableState;
+    const playerData = cloneDeep(originalPlayerData) as PlayerData[];
+
+    state.centerRevealAmount = 5;
+    state.end_of_round = true;
+
+    const winners = get_winners(state);
+    if (winners) {
+        // take away the bet from the players
+        state.players.forEach((player) => {
+            player_name_ref(
+                state,
+                playerData,
+                player.name
+            ).player_data_ref.remainingChips -= player.bet;
         });
-    };
-    const next_player = () => {
-        setTableState((draft) => {
-            if (draft.requireBetRound) {
-                draft.currentPlayerIndex =
-                    (draft.currentPlayerIndex + 1) % draft.players.length;
-                if (draft.currentPlayerIndex === 0) {
-                    draft.requireBetRound = false;
-                }
-            } else {
-                draft.currentPlayerIndex =
-                    (draft.currentPlayerIndex + 1) % draft.players.length;
-                if (draft.currentPlayerIndex === 0) {
-                    next_center();
-                }
-            }
+        // give the pot to the winners
+        const pot = sum(state.players.map((player) => player.bet));
+        const winner_pot = pot / winners.length;
+        winners.forEach((winner) => {
+            player_name_ref(
+                state,
+                playerData,
+                winner.name
+            ).player_data_ref.remainingChips += winner_pot;
         });
-    };
+    }
+    return { state, playerData };
+}
+
+function SinglePlayer(props: { tableId: string }) {
+    const [playerData, setPlayerData] = useState<PlayerData[]>([
+        { name: "Player 1", remainingChips: 100 },
+        { name: "Player 2", remainingChips: 100 },
+        { name: "Player 3", remainingChips: 100 },
+    ]);
+    const [tableState, setTableState] = useState<TableState>(
+        generate_game(playerData, props.tableId)
+    );
     function action_handler(action: TableStateAction) {
-        setTableState((draft) => {
-            if (action.type === "bet") {
-                (
-                    draft.players[draft.currentPlayerIndex] ??
-                    error("Current player is undefined")
-                ).bet = action.bet;
-                if (draft.currentPlayerIndex !== 0 && action.bet > min_bet) {
-                    draft.requireBetRound = true;
-                }
-            } else if (action.type === "fold") {
-                (
-                    draft.players[draft.currentPlayerIndex] ??
-                    error("Current player is undefined")
-                ).folded = true;
-            }
-        });
-        next_player();
+        const {
+            state: new_state,
+            playerData: new_player_data,
+            end_of_round,
+        } = compute_next_state(tableState, playerData, action);
+        setTableState(new_state);
+        setPlayerData(new_player_data);
+        if (end_of_round) {
+            setTimeout(() => {
+                setTableState(() => generate_game(playerData, props.tableId));
+            }, 3000);
+        }
     }
     function create_visual_player_state(
         player: TableState["players"][number],
@@ -202,14 +273,16 @@ function SinglePlayer(props: { tableId: string }) {
         return {
             ...player,
             you,
-            turn: you && !tableState.revealed, // Because it's single player, you are always the current player
+            turn: you && !tableState.end_of_round, // Because it's single player, you are always the current player
             remainingChips: (
-                player_data.find((p) => p.name === player.name) ??
+                playerData.find((p) => p.name === player.name) ??
                 error("Player data not found")
             ).remainingChips,
             hand: player.folded
                 ? "folded"
-                : player.hand.map((card) => (you ? card : "hidden")),
+                : player.hand.map((card) =>
+                      you || tableState.end_of_round ? card : "hidden"
+                  ),
         };
     }
     function create_visual_table_state(
@@ -221,6 +294,7 @@ function SinglePlayer(props: { tableId: string }) {
             ),
             players: tableState.players.map(create_visual_player_state),
             tableId: tableState.tableId,
+            end_of_round: tableState.end_of_round,
         } satisfies VisualTableState;
         return table;
     }
@@ -231,10 +305,10 @@ function SinglePlayer(props: { tableId: string }) {
                 submit_action={action_handler}
                 state={create_visual_table_state(tableState)}
             />
-            {/* <div className="w-[300px] text-xs">
+            <div className="w-[300px] text-xs">
                 <p>State</p>
                 <pre>{JSON.stringify(tableState, null, 2)}</pre>
-            </div> */}
+            </div>
         </div>
     );
 }

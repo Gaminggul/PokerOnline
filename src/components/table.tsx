@@ -75,7 +75,7 @@ function Table({
                         }
                     }
                 })()}
-                {state.players[you_index]?.turn ? (
+                {state.players[you_index]?.turn && !state.end_of_round ? (
                     <div className="flex items-center gap-8 rounded-md bg-slate-600 p-4">
                         <UiButton
                             onClick={() => submit_action({ type: "fold" })}

@@ -45,7 +45,7 @@ function SidebarButton(props: { text: string }) {
 
 function Sidebar() {
     return (
-        <div className="flex h-screen w-1/12 min-w-[100px] flex-col items-stretch gap-3 bg-slate-900 text-2xl text-white">
+        <div className="flex h-screen w-1/12 min-w-[100px] flex-col items-stretch gap-3 bg-slate-900 py-4 text-2xl text-white">
             <Profile />
             <Link href="/">
                 <SidebarButton text="Home" />
@@ -73,7 +73,7 @@ function Sidebar() {
 function Profile() {
     const { data: session } = useSession({ required: true });
     return (
-        <div>
+        <div className="flex flex-col items-center text-center text-sm">
             <Image src="/favicon.ico" alt="Profilepic" width={64} height={64} />
             {session?.user.name}
         </div>

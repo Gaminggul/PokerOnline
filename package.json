@@ -22,7 +22,6 @@
         "@types/lodash-es": "^4.17.6",
         "@types/uuid": "^9.0.0",
         "functional-utilities": "^1.20.0",
-        "immer": "^9.0.19",
         "lodash-es": "^4.17.21",
         "next": "13.1.6",
         "next-auth": "^4.19.2",
@@ -30,7 +29,6 @@
         "react-device-detect": "^2.2.3",
         "react-dom": "18.2.0",
         "superjson": "1.9.1",
-        "use-immer": "^0.8.1",
         "uuid": "^9.0.0",
         "zod": "^3.20.6"
     },

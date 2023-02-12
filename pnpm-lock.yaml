@@ -20,7 +20,6 @@ specifiers:
   eslint: ^8.34.0
   eslint-config-next: 13.1.6
   functional-utilities: ^1.20.0
-  immer: ^9.0.19
   lodash-es: ^4.17.21
   next: 13.1.6
   next-auth: ^4.19.2
@@ -34,7 +33,6 @@ specifiers:
   superjson: 1.9.1
   tailwindcss: ^3.2.6
   typescript: ^4.9.5
-  use-immer: ^0.8.1
   uuid: ^9.0.0
   zod: ^3.20.6
 
@@ -49,7 +47,6 @@ dependencies:
   '@types/lodash-es': 4.17.6
   '@types/uuid': 9.0.0
   functional-utilities: 1.20.0
-  immer: 9.0.19
   lodash-es: 4.17.21
   next: 13.1.6_biqbaboplfbrettd7655fr4n2y
   next-auth: 4.19.2_3vryta7zmbcsw4rrqf4axjqggm
@@ -57,7 +54,6 @@ dependencies:
   react-device-detect: 2.2.3_biqbaboplfbrettd7655fr4n2y
   react-dom: 18.2.0_react@18.2.0
   superjson: 1.9.1
-  use-immer: 0.8.1_immer@9.0.19+react@18.2.0
   uuid: 9.0.0
   zod: 3.20.6
 
@@ -1649,10 +1645,6 @@ packages:
     engines: {node: '>= 4'}
     dev: true
 
-  /immer/9.0.19:
-    resolution: {integrity: sha512-eY+Y0qcsB4TZKwgQzLaE/lqYMlKhv5J9dyd2RhhtGhNo2njPXDqU9XPfcNfa3MIDsdtZt5KlkIsirlo4dHsWdQ==}
-    dev: false
-
   /import-fresh/3.3.0:
     resolution: {integrity: sha512-veYYhQa+D1QBKznvhUHxb8faxlrwUnxseDAbAp457E0wLNio2bOSKnjYDhMj+YiAq61xrMGhQk9iXVk5FzgQMw==}
     engines: {node: '>=6'}
@@ -2858,16 +2850,6 @@ packages:
     dependencies:
       punycode: 2.3.0
     dev: true
-
-  /use-immer/0.8.1_immer@9.0.19+react@18.2.0:
-    resolution: {integrity: sha512-OfTFf1pL+ICjjcLPn9+ZnaJO/Yg4MBzYZtACEe2mZ/W2A5col28PNUnwowOAaBuOogACOK/37TU17KgsIhUpOw==}
-    peerDependencies:
-      immer: '>=2.0.0'
-      react: ^16.8.0 || ^17.0.1 || ^18.0.0
-    dependencies:
-      immer: 9.0.19
-      react: 18.2.0
-    dev: false
 
   /use-sync-external-store/1.2.0_react@18.2.0:
     resolution: {integrity: sha512-eEgnFxGQ1Ife9bzYs6VLi8/4X6CObHMw9Qr9tPY43iKwsPw8xE8+EFsf/2cFZ5S3esXgpWgtSCtLNS41F+sKPA==}

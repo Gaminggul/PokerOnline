@@ -3,6 +3,7 @@ import type { CardId } from "./cards";
 export interface VisualTableState {
     tableId: string;
     centerCards: (CardId | "hidden")[];
+    end_of_round: boolean;
     players: VisualPlayerState[]; // order matters
 }
 
@@ -31,7 +32,7 @@ export interface TableState {
     players: PlayerState[];
     currentPlayerIndex: number;
     currentBet: number;
-    revealed: boolean;
+    end_of_round: boolean;
     requireBetRound: boolean;
     deck: CardId[];
 }
