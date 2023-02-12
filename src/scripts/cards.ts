@@ -81,14 +81,17 @@ function longest_consecutive_sequence(arr: number[]): number[] {
     let longest: number[] = [];
     let current: number[] = [];
     for (const num of arr) {
-        if (current.length > 0 && num === (current.at(-1) ?? error("out of bounds")) + 1) {
+        if (current.length === 0 || num === (current.at(-1) ?? error("out of bounds")) + 1) {
             current.push(num);
         } else {
-            current = [num];
             if (current.length > longest.length) {
                 longest = current;
             }
+            current = [num];
         }
+    }
+    if (current.length > longest.length) {
+        longest = current;
     }
     return longest;
 }

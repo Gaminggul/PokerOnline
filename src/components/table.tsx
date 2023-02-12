@@ -6,6 +6,8 @@ import type {
     TableStateAction,
 } from "../scripts/table_state";
 import { useState } from "react";
+import { max } from "lodash-es";
+import { error } from "functional-utilities";
 
 function Table({
     state,
@@ -14,17 +16,19 @@ function Table({
     state: VisualTableState;
     submit_action: (action: TableStateAction) => void;
 }) {
-    const [bet, setBet] = useState(0);
-    const min_bet = state.players.reduce((min, player) => {
-        if (player.bet < min) {
-            return player.bet;
-        } else {
-            return min;
-        }
-    }, 0);
-    if (min_bet > bet) {
-        setBet(min_bet);
-    }
+    const [bet, setBet] = useState(1);
+    const [betInput, setBetInput] = useState("1");
+    const min_bet =
+        max([
+            state.players.reduce((min, player) => {
+                if (player.bet < min) {
+                    return player.bet;
+                } else {
+                    return min;
+                }
+            }, 1),
+            1,
+        ]) ?? error("No min bet");
     const you_index = state.players.findIndex((player) => player.you);
     return (
         <div className="flex w-full flex-col gap-8">
@@ -94,11 +98,17 @@ function Table({
                                 <div>
                                     <p>Min bet is {min_bet}</p>
                                     <input
-                                        type="number"
-                                        value={bet}
-                                        onChange={(e) =>
-                                            setBet(Number(e.target.value))
-                                        }
+                                        type="text"
+                                        value={betInput}
+                                        onChange={(e) => {
+                                            setBetInput(e.target.value);
+                                            const bet = parseInt(
+                                                e.target.value
+                                            );
+                                            if (!isNaN(bet)) {
+                                                setBet(bet);
+                                            }
+                                        }}
                                     />
                                 </div>
                                 <UiButton
@@ -108,9 +118,22 @@ function Table({
                                             bet,
                                         })
                                     }
+                                    locked={
+                                        bet < min_bet || !parseInt(betInput)
+                                    }
                                 >
                                     Bet
                                 </UiButton>
+                                {bet < min_bet && !isNaN(parseInt(betInput)) ? (
+                                    <p className="text-red-500">
+                                        Bet must be at least {min_bet}
+                                    </p>
+                                ) : null}
+                                {!isNaN(parseInt(betInput)) ? null : (
+                                    <p className="text-red-500">
+                                        Bet must be a number
+                                    </p>
+                                )}
                             </div>
                         </div>
                     ) : (
@@ -134,17 +157,30 @@ function Table({
 function UiButton({
     onClick,
     children,
+    locked,
 }: {
     onClick: () => void;
     children: React.ReactNode;
+    locked?: boolean;
 }) {
     return (
-        <button
-            className="rounded bg-blue-500 py-2 px-4 font-bold text-white hover:bg-blue-700"
-            onClick={onClick}
-        >
-            {children}
-        </button>
+        <>
+            {locked ? (
+                <button
+                    className="rounded-md bg-gray-300 px-4 py-2 text-gray-700"
+                    onClick={onClick}
+                >
+                    {children}
+                </button>
+            ) : (
+                <button
+                    className="rounded-md bg-blue-500 px-4 py-2 text-white"
+                    onClick={onClick}
+                >
+                    {children}
+                </button>
+            )}
+        </>
     );
 }
 

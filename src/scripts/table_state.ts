@@ -3,7 +3,6 @@ import type { CardId } from "./cards";
 export interface VisualTableState {
     tableId: string;
     centerCards: (CardId | "hidden")[];
-    pot: number;
     players: VisualPlayerState[]; // order matters
 }
 
@@ -18,12 +17,12 @@ export interface VisualPlayerState {
 
 export type TableStateAction =
     | {
-          type: "fold";
-      }
+        type: "fold";
+    }
     | {
-          type: "bet";
-          bet: number;
-      };
+        type: "bet";
+        bet: number;
+    };
 
 export interface TableState {
     tableId: string;
@@ -32,7 +31,6 @@ export interface TableState {
     players: PlayerState[];
     currentPlayerIndex: number;
     currentBet: number;
-    pot: number;
     revealed: boolean;
     requireBetRound: boolean;
     deck: CardId[];
@@ -41,7 +39,6 @@ export interface TableState {
 export interface PlayerState {
     name: string;
     bet: number;
-    remainingChips: number;
     hand: CardId[];
     folded: boolean;
 }

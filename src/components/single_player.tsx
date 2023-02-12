@@ -6,41 +6,48 @@ import type {
     VisualPlayerState,
     VisualTableState,
 } from "../scripts/table_state";
-import { error, range } from "functional-utilities";
+import { error } from "functional-utilities";
 import Table from "./table";
 import { create_deck } from "../scripts/create_deck";
-import { type CardId } from "../scripts/cards";
+import { get_combination, type CardId } from "../scripts/cards";
+import { max } from "lodash-es";
 
-function generate_game(player_amount: number, table_id: string): TableState {
+interface PlayerData {
+    name: string;
+    remainingChips: number;
+}
+
+function generate_game(
+    player_data: PlayerData[],
+    table_id: string
+): TableState {
     const deck = create_deck();
-    if (player_amount > 10) {
+    if (player_data.length > 10) {
         throw new Error("Too many players");
     }
 
-    const players = range(player_amount).map((i) => {
+    const players = player_data.map((player) => {
         return {
-            name: `Player ${i + 1}`,
+            name: player.name,
             bet: 0,
-            //hand: ["clubs_3", "clubs_4"],
+            //hand: ["spades_10", "hearts_9"],
             hand: deck.splice(0, 2),
-            remainingChips: 100,
             folded: false,
         } satisfies PlayerState;
     });
 
     const centerCards: CardId[] = deck.splice(0, 5);
     // [
-    //     "clubs_5",
-    //     "clubs_6",
-    //     "clubs_7",
-    //     "spades_7",
-    //     "spades_9",
+    //     "diamonds_queen",
+    //     "clubs_king",
+    //     "spades_jack",
+    //     "spades_5",
+    //     "clubs_queen",
     // ];
 
     return {
         players,
         centerCards,
-        pot: 0,
         centerRevealAmount: 3,
         currentBet: 0,
         currentPlayerIndex: 0,
@@ -51,31 +58,104 @@ function generate_game(player_amount: number, table_id: string): TableState {
     };
 }
 
-const player_amount = 3;
+function get_winners(state: TableState): PlayerState[] | undefined {
+    // winners are the players with the same highest score
+    // There will only be one winner most of the time
+    const possible_winners = state.players.filter((player) => !player.folded);
+    const win_score =
+        max(
+            possible_winners.map((player) => {
+                const combination = get_combination(
+                    player.hand.concat(state.centerCards)
+                );
+                return combination.type === "none"
+                    ? 0
+                    : combination.base_score * 100 + combination.score;
+            })
+        ) ?? 0;
+    const winners = possible_winners.filter((player) => {
+        const combination = get_combination(
+            player.hand.concat(state.centerCards)
+        );
+        return (
+            combination.type !== "none" &&
+            combination.base_score * 100 + combination.score === win_score
+        );
+    });
+    if (winners.length === 0) {
+        return undefined;
+    } else {
+        return winners;
+    }
+}
 
 function SinglePlayer(props: { tableId: string }) {
+    const [player_data, setPlayerData] = useImmer<PlayerData[]>([
+        { name: "Player 1", remainingChips: 100 },
+        { name: "Player 2", remainingChips: 100 },
+        { name: "Player 3", remainingChips: 100 },
+    ]);
     const [tableState, setTableState] = useImmer<TableState>(
-        generate_game(player_amount, props.tableId)
+        generate_game(player_data, props.tableId)
     );
-    const min_bet = tableState.players.reduce((min, player) => {
-        if (player.bet > min) {
-            return player.bet;
-        } else {
-            return min;
-        }
-    }, 0);
+    const min_bet =
+        max([
+            tableState.players.reduce((min, player) => {
+                if (player.bet > min) {
+                    return player.bet;
+                } else {
+                    return min;
+                }
+            }, 1),
+            1,
+        ]) ?? error("Min bet is undefined");
+    const end_of_round = () => {
+        setTableState((draft) => {
+            draft.centerRevealAmount = 5;
+            draft.revealed = true;
+            setTimeout(() => {
+                setTableState(() => generate_game(player_data, props.tableId));
+            }, 5000);
+        });
+        setPlayerData((player_draft) => {
+            const winners = get_winners(tableState);
+            const player_map = player_draft.reduce((map, player) => {
+                map[player.name] = player;
+                return map;
+            }, {} as Record<string, PlayerData>);
+            if (winners) {
+                // take away the bet from the players
+                tableState.players.forEach((player) => {
+                    const player_data = player_map[player.name];
+                    if (player_data) {
+                        player_data.remainingChips -= player.bet;
+                    }
+                });
+                // give the pot to the winners
+                const pot = tableState.players.reduce(
+                    (sum, player) => sum + player.bet,
+                    0
+                );
+                const winner_pot = pot / winners.length;
+                winners.forEach((winner) => {
+                    const player = player_draft.find(
+                        (player) => player.name === winner.name
+                    );
+                    if (player) {
+                        player.remainingChips += winner_pot;
+                    }
+                });
+            }
+        });
+    };
+
     const next_center = () => {
         console.log("next center");
         setTableState((draft) => {
             draft.centerRevealAmount++;
             if (draft.centerRevealAmount === 6) {
                 draft.centerRevealAmount = 5;
-                draft.revealed = true;
-                setTimeout(() => {
-                    setTableState(() =>
-                        generate_game(player_amount, props.tableId)
-                    );
-                }, 5000);
+                end_of_round();
             }
         });
     };
@@ -119,14 +199,18 @@ function SinglePlayer(props: { tableId: string }) {
         player: TableState["players"][number],
         index: number
     ): VisualPlayerState {
-        const turn = index === tableState.currentPlayerIndex;
+        const you = index === tableState.currentPlayerIndex;
         return {
             ...player,
-            you: turn, // Because it's single player, you are always the current player
-            turn,
+            you,
+            turn: you && !tableState.revealed, // Because it's single player, you are always the current player
+            remainingChips: (
+                player_data.find((p) => p.name === player.name) ??
+                error("Player data not found")
+            ).remainingChips,
             hand: player.folded
                 ? "folded"
-                : player.hand.map((card) => (turn ? card : "hidden")),
+                : player.hand.map((card) => (you ? card : "hidden")),
         };
     }
     function create_visual_table_state(
@@ -137,7 +221,6 @@ function SinglePlayer(props: { tableId: string }) {
                 i < tableState.centerRevealAmount ? card : "hidden"
             ),
             players: tableState.players.map(create_visual_player_state),
-            pot: tableState.pot,
             tableId: tableState.tableId,
         } satisfies VisualTableState;
         return table;
