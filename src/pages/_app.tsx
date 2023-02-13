@@ -2,7 +2,7 @@ import { type AppType } from "next/app";
 import { type Session } from "next-auth";
 import { SessionProvider } from "next-auth/react";
 import { signOut, useSession } from "next-auth/react";
-import type { PropsWithChildren } from "react";
+import type { PropsWithChildren, ReactNode } from "react";
 import Link from "next/link";
 
 import { api } from "../utils/api";
@@ -26,18 +26,23 @@ const MyApp: AppType<{ session: Session | null }> = ({
 
 function Layout(props: PropsWithChildren<unknown>) {
     return (
-        <div className="flex">
-            <Sidebar></Sidebar>
-            <main className="h-screen w-full overflow-scroll bg-slate-700">
-                {props.children}
-            </main>
+        <div>
+            <div className="flex h-32 w-full items-center justify-center bg-white">
+                <p>Banner Bild</p>
+            </div>
+            <div className="flex">
+                <main className="h-screen w-full overflow-scroll bg-slate-700">
+                    {props.children}
+                </main>
+                <Sidebar></Sidebar>
+            </div>
         </div>
     );
 }
 
 function SidebarButton(props: { text: string }) {
     return (
-        <p className="w-full py-4 text-center text-white hover:bg-slate-800">
+        <p className="w-full py-4 text-left text-white hover:bg-slate-800">
             {props.text}
         </p>
     );
@@ -45,7 +50,7 @@ function SidebarButton(props: { text: string }) {
 
 function Sidebar() {
     return (
-        <div className="flex h-screen w-1/12 min-w-[100px] flex-col items-stretch gap-3 bg-slate-900 py-4 text-2xl text-white">
+        <div className="max-w-1/6 flex h-screen w-64 min-w-[100px] flex-col items-stretch gap-3 bg-slate-900 p-6 py-4 text-2xl text-white">
             <Profile />
             <Link href="/">
                 <SidebarButton text="Home" />
@@ -73,9 +78,9 @@ function Sidebar() {
 function Profile() {
     const { data: session } = useSession({ required: true });
     return (
-        <div className="flex flex-col items-center text-center text-sm">
+        <div className="flex items-center">
+            <p>{session?.user.name}</p>
             <Image src="/favicon.ico" alt="Profilepic" width={64} height={64} />
-            {session?.user.name}
         </div>
     );
 }
