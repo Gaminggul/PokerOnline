@@ -7,7 +7,6 @@ import type {
 } from "../scripts/table_state";
 import { useEffect, useState } from "react";
 import { max } from "lodash-es";
-import { error } from "functional-utilities";
 import { isFirefox } from "react-device-detect";
 
 function Table({
@@ -17,20 +16,12 @@ function Table({
     state: VisualTableState;
     submit_action: (action: TableStateAction) => void;
 }) {
-    const [bet, setBet] = useState(1);
-    const [betInput, setBetInput] = useState("1");
+    const [bet, setBet] = useState(0);
+    const [betInput, setBetInput] = useState("0");
     const min_bet =
-        max([
-            state.players.reduce((min, player) => {
-                if (player.bet > min) {
-                    return player.bet;
-                } else {
-                    return min;
-                }
-            }, 1),
-            1,
-        ]) ?? error("No min bet");
+        max(state.players.map(p => p.bet)) ?? 0;
     const you_index = state.players.findIndex((player) => player.you);
+    const player = state.players[you_index]
     return (
         <div className="flex w-full flex-col gap-8">
             <p className="text-xs text-gray-800">Table ID: {state.tableId}</p>
@@ -45,7 +36,7 @@ function Table({
             </div>
             <div className="flex items-center justify-evenly">
                 {(() => {
-                    const hand = state.players[you_index]?.hand;
+                    const hand = player?.hand;
                     if (hand === "folded") {
                         return <p>Folded</p>;
                     }
@@ -70,11 +61,13 @@ function Table({
                                             .map((card) => card)
                                             .join(", ")}
                                     </p>
+                                    <p>Pot: {state.pot}</p>
                                 </div>
                             );
                         }
                     }
                 })()}
+                {/* Es muss noch ein "Check" button hin */}
                 {state.players[you_index]?.turn && !state.end_of_round ? (
                     <div className="flex items-center gap-8 rounded-md bg-slate-600 p-4">
                         <UiButton
@@ -83,31 +76,50 @@ function Table({
                             Fold
                         </UiButton>
                         <div className="flex items-center gap-4">
-                            <div>
-                                <p>Min bet is {min_bet}</p>
-                                <input
-                                    type="text"
-                                    value={betInput}
-                                    onChange={(e) => {
-                                        setBetInput(e.target.value);
-                                        const bet = parseInt(e.target.value);
-                                        if (!isNaN(bet)) {
-                                            setBet(bet);
-                                        }
-                                    }}
-                                />
-                            </div>
-                            <UiButton
-                                onClick={() =>
-                                    submit_action({
-                                        type: "bet",
-                                        bet,
-                                    })
-                                }
-                                locked={bet < min_bet || !parseInt(betInput)}
-                            >
-                                Bet
-                            </UiButton>
+                            {(player?.remainingChips ?? 0) > min_bet ? (<>
+                                <div>
+                                    <p>Min bet is {min_bet}</p>
+                                    <input
+                                        type="text"
+                                        value={betInput}
+                                        onChange={(e) => {
+                                            setBetInput(e.target.value);
+                                            const bet = parseInt(e.target.value);
+                                            if (!isNaN(bet)) {
+                                                setBet(bet);
+                                            }
+                                        }}
+                                    />
+                                </div>
+                                <UiButton
+                                    onClick={() =>
+                                        submit_action({
+                                            type: "bet",
+                                            bet,
+                                        })
+                                    }
+                                    locked={bet < min_bet || isNaN(parseInt(betInput))}
+                                >
+                                    Bet
+                                </UiButton>
+                                {min_bet === player?.bet ?
+                                    <UiButton onClick={() => {
+                                        submit_action({
+                                            type: "bet",
+                                            bet: player.bet
+                                        })
+                                    }}>Check</UiButton>
+                                    : undefined}
+                            </>) : <>
+                                <div>
+                                    <UiButton
+                                        onClick={() => submit_action({ type: "bet", bet: player?.remainingChips ?? 0 })}
+                                    >
+                                        Bet All
+                                    </UiButton>
+                                </div>
+
+                            </>}
                             {bet < min_bet && !isNaN(parseInt(betInput)) ? (
                                 <p className="text-red-500">
                                     Bet must be at least {min_bet}

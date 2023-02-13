@@ -5,11 +5,11 @@ import type {
     VisualPlayerState,
     VisualTableState,
 } from "../scripts/table_state";
-import { error } from "functional-utilities";
+import { error, range } from "functional-utilities";
 import Table from "./table";
 import { create_deck } from "../scripts/create_deck";
 import { get_combination, type CardId } from "../scripts/cards";
-import { cloneDeep, max, sum } from "lodash-es";
+import { cloneDeep, max, min, sum } from "lodash-es";
 import { useState } from "react";
 
 interface PlayerData {
@@ -25,11 +25,11 @@ function generate_game(
     if (player_data.length > 10) {
         throw new Error("Too many players");
     }
-
-    const players = player_data.map((player) => {
+    const small_blind_value = 5;
+    const players = player_data.map((player, i) => {
         return {
             name: player.name,
-            bet: 0,
+            bet: i === 0 ? small_blind_value : (i === 1 ? small_blind_value * 2 : 0),
             //hand: ["spades_10", "hearts_9"],
             hand: deck.splice(0, 2),
             folded: false,
@@ -48,13 +48,14 @@ function generate_game(
     return {
         players,
         centerCards,
-        centerRevealAmount: 3,
+        centerRevealAmount: 0,
         currentBet: 0,
         currentPlayerIndex: 0,
         requireBetRound: false,
         end_of_round: false,
         deck,
         tableId: table_id,
+        pot: 0,
     };
 }
 
@@ -90,18 +91,7 @@ function get_winners(state: TableState): PlayerState[] | undefined {
 }
 
 function min_bet(state: Readonly<TableState>): number {
-    return (
-        max([
-            state.players.reduce((min, player) => {
-                if (player.bet > min) {
-                    return player.bet;
-                } else {
-                    return min;
-                }
-            }, 1),
-            1,
-        ]) ?? error("Min bet is undefined")
-    );
+    return max(state.players.filter(p => !p.folded).map(p => p.bet)) ?? 0
 }
 
 function current_player_ref(
@@ -168,8 +158,14 @@ function compute_next_state(
     }
 
     ({ state, playerData } = compute_next_player(state, playerData));
+    const is_inactive = (ref: { state_ref: PlayerState, player_data_ref: PlayerData }) => {
+        return ref.state_ref.folded || (ref.player_data_ref.remainingChips - ref.state_ref.bet) <= 0
+    }
     while (
-        current_player_ref(state, playerData).state_ref.folded &&
+        (() => {
+            return is_inactive(current_player_ref(state, playerData)) ||
+                (playerData.filter(p => !is_inactive(player_name_ref(state, playerData, p.name))).length <= 1)
+        })() &&
         !state.end_of_round
     ) {
         ({ state, playerData } = compute_next_player(state, playerData));
@@ -189,7 +185,10 @@ function compute_next_player(
     let playerData = cloneDeep(originalPlayerData) as PlayerData[];
     state.currentPlayerIndex =
         (state.currentPlayerIndex + 1) % state.players.length;
-    if (state.currentPlayerIndex === 0) {
+
+    if (state.players.filter(p => !p.folded).length <= 1) {
+        ({ state, playerData } = compute_end_of_round(state, playerData))
+    } else if (state.currentPlayerIndex === 0) {
         ({ state, playerData } = compute_next_center(state, playerData));
     }
     return { state, playerData };
@@ -207,7 +206,16 @@ function compute_next_center(
     if (state.requireBetRound) {
         state.requireBetRound = false;
     } else {
-        state.centerRevealAmount++;
+        state.players.map(p => {
+            state.pot += p.bet
+            player_name_ref(state, playerData, p.name).player_data_ref.remainingChips -= p.bet
+            p.bet = 0
+        })
+        if (state.centerRevealAmount === 0) {
+            state.centerRevealAmount = 3;
+        } else {
+            state.centerRevealAmount++;
+        }
         if (state.centerRevealAmount === 6) {
             state.centerRevealAmount = 5;
             ({ state, playerData } = compute_end_of_round(state, playerData));
@@ -236,16 +244,8 @@ function compute_end_of_round(
         const active_players = state.players.filter(
             (player) => !player.folded
         );
-        active_players.forEach((player) => {
-            player_name_ref(
-                state,
-                playerData,
-                player.name
-            ).player_data_ref.remainingChips -= player.bet;
-        });
         // give the pot to the winners
-        const pot = sum(active_players.map((player) => player.bet));
-        const winner_pot = pot / winners.length;
+        const winner_pot = state.pot / winners.length;
         winners.forEach((winner) => {
             player_name_ref(
                 state,
@@ -258,11 +258,10 @@ function compute_end_of_round(
 }
 
 function SinglePlayer(props: { tableId: string }) {
-    const [playerData, setPlayerData] = useState<PlayerData[]>([
-        { name: "Player 1", remainingChips: 100 },
-        { name: "Player 2", remainingChips: 100 },
-        { name: "Player 3", remainingChips: 100 },
-    ]);
+    const [playerData, setPlayerData] = useState<PlayerData[]>(range(8).map(i => ({
+        name: `Player ${i}`,
+        remainingChips: 1000
+    })));
     const [tableState, setTableState] = useState<TableState>(
         generate_game(playerData, props.tableId)
     );
@@ -293,8 +292,8 @@ function SinglePlayer(props: { tableId: string }) {
             hand: player.folded
                 ? "folded"
                 : player.hand.map((card) =>
-                      you || tableState.end_of_round ? card : "hidden"
-                  ),
+                    you || tableState.end_of_round ? card : "hidden"
+                ),
         };
     }
     function create_visual_table_state(
@@ -307,6 +306,7 @@ function SinglePlayer(props: { tableId: string }) {
             players: tableState.players.map(create_visual_player_state),
             tableId: tableState.tableId,
             end_of_round: tableState.end_of_round,
+            pot: tableState.pot
         } satisfies VisualTableState;
         return table;
     }

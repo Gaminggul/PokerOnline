@@ -4,6 +4,7 @@ export interface VisualTableState {
     tableId: string;
     centerCards: (CardId | "hidden")[];
     end_of_round: boolean;
+    pot: number;
     players: VisualPlayerState[]; // order matters
 }
 
@@ -18,12 +19,12 @@ export interface VisualPlayerState {
 
 export type TableStateAction =
     | {
-          type: "fold";
-      }
+        type: "fold";
+    }
     | {
-          type: "bet";
-          bet: number;
-      };
+        type: "bet";
+        bet: number;
+    };
 
 export interface TableState {
     tableId: string;
@@ -34,6 +35,7 @@ export interface TableState {
     currentBet: number;
     end_of_round: boolean;
     requireBetRound: boolean;
+    pot: number;
     deck: CardId[];
 }
 
