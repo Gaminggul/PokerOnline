@@ -19,12 +19,12 @@ export interface VisualPlayerState {
 
 export type TableStateAction =
     | {
-        type: "fold";
-    }
+          type: "fold";
+      }
     | {
-        type: "bet";
-        bet: number;
-    };
+          type: "bet";
+          bet: number;
+      };
 
 export interface TableState {
     tableId: string;
@@ -32,7 +32,6 @@ export interface TableState {
     centerRevealAmount: number;
     players: PlayerState[];
     currentPlayerIndex: number;
-    currentBet: number;
     end_of_round: boolean;
     requireBetRound: boolean;
     pot: number;

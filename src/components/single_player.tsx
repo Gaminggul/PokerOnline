@@ -54,7 +54,6 @@ function generate_game(
         players,
         centerCards,
         centerRevealAmount: 0,
-        currentBet: 0,
         currentPlayerIndex: 2 % players.length,
         requireBetRound: false,
         end_of_round: false,

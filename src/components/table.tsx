@@ -18,10 +18,9 @@ function Table({
 }) {
     const [bet, setBet] = useState(0);
     const [betInput, setBetInput] = useState("0");
-    const min_bet =
-        max(state.players.map(p => p.bet)) ?? 0;
+    const min_bet = max(state.players.map((p) => p.bet)) ?? 0;
     const you_index = state.players.findIndex((player) => player.you);
-    const player = state.players[you_index]
+    const player = state.players[you_index];
     return (
         <div className="flex w-full flex-col gap-8">
             <p className="text-xs text-gray-800">Table ID: {state.tableId}</p>
@@ -76,50 +75,69 @@ function Table({
                             Fold
                         </UiButton>
                         <div className="flex items-center gap-4">
-                            {(player?.remainingChips ?? 0) > min_bet ? (<>
-                                <div>
-                                    <p>Min bet is {min_bet}</p>
-                                    <input
-                                        type="text"
-                                        value={betInput}
-                                        onChange={(e) => {
-                                            setBetInput(e.target.value);
-                                            const bet = parseInt(e.target.value);
-                                            if (!isNaN(bet)) {
-                                                setBet(bet);
-                                            }
-                                        }}
-                                    />
-                                </div>
-                                <UiButton
-                                    onClick={() =>
-                                        submit_action({
-                                            type: "bet",
-                                            bet,
-                                        })
-                                    }
-                                    locked={bet < min_bet || isNaN(parseInt(betInput))}
-                                >
-                                    Bet
-                                </UiButton>
-                                {min_bet === player?.bet ?
-                                    <UiButton onClick={() => {
-                                        submit_action({
-                                            type: "bet",
-                                            bet: player.bet
-                                        })
-                                    }}>Check</UiButton>
-                                    : undefined}
-                            </>) : <>
-                                <div>
+                            {(player?.remainingChips ?? 0) > min_bet ? (
+                                <>
+                                    <div>
+                                        <p>Min bet is {min_bet}</p>
+                                        <input
+                                            type="text"
+                                            value={betInput}
+                                            onChange={(e) => {
+                                                setBetInput(e.target.value);
+                                                const bet = parseInt(
+                                                    e.target.value
+                                                );
+                                                if (!isNaN(bet)) {
+                                                    setBet(bet);
+                                                }
+                                            }}
+                                        />
+                                    </div>
                                     <UiButton
-                                        onClick={() => submit_action({ type: "bet", bet: player?.remainingChips ?? 0 })}
+                                        onClick={() =>
+                                            submit_action({
+                                                type: "bet",
+                                                bet,
+                                            })
+                                        }
+                                        locked={
+                                            bet < min_bet ||
+                                            isNaN(parseInt(betInput))
+                                        }
                                     >
-                                        Bet All
+                                        Bet
                                     </UiButton>
-                                </div>
-
-                            </>}
+                                    {min_bet === player?.bet ? (
+                                        <UiButton
+                                            onClick={() => {
+                                                submit_action({
+                                                    type: "bet",
+                                                    bet: player.bet,
+                                                });
+                                            }}
+                                        >
+                                            Check
+                                        </UiButton>
+                                    ) : undefined}
+                                </>
+                            ) : (
+                                <>
+                                    <div>
+                                        <UiButton
+                                            onClick={() =>
+                                                submit_action({
+                                                    type: "bet",
+                                                    bet:
+                                                        player?.remainingChips ??
+                                                        0,
+                                                })
+                                            }
+                                        >
+                                            Bet All
+                                        </UiButton>
+                                    </div>
+                                </>
+                            )}
                             {bet < min_bet && !isNaN(parseInt(betInput)) ? (
                                 <p className="text-red-500">
                                     Bet must be at least {min_bet}

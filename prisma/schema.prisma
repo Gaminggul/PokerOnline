@@ -66,16 +66,17 @@ model Player {
 }
 
 model Game {
-    id         String   @id @default(uuid())
-    createdAt  DateTime @default(now())
-    player     User[]
-    min_bid    Int
-    max_bid    Int
-    pot        Int
-    cards      String[]
-    access     Access
-    password   String?
-    role_index Int
+    id                 String   @id @default(uuid())
+    createdAt          DateTime @default(now())
+    centerCards        String[]
+    centerRevealAmount Int
+    player             User[]
+    currentPlayerIndex Int
+    pot                Int
+    cards              String[]
+    access             Access
+    password           String?
+    role_index         Int
 }
 
 enum Role {

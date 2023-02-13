@@ -1,6 +1,7 @@
 import { useSession } from "next-auth/react";
 import { ReactNode } from "react";
 import { Btn } from "../components/btn";
+import { Layout } from "../components/layout";
 
 function OptionBox(props: { title: string; children: ReactNode }) {
     return (
@@ -14,36 +15,38 @@ function OptionBox(props: { title: string; children: ReactNode }) {
 function Home() {
     const session = useSession();
     return (
-        <div className="flex flex-col p-12 text-white">
-            <h1 className="text-3xl font-bold">
-                Hello {session.data?.user.name}
-            </h1>
-            <div className="mt-12 flex justify-evenly gap-4">
-                <OptionBox title="Tournaments">
-                    <ul>
-                        <li>Tournament 1</li>
-                        <li>Tournament 2</li>
-                        <li>Tournament 3</li>
-                    </ul>
-                </OptionBox>
-                <OptionBox title="Play">
-                    <div className="flex h-full flex-col items-center justify-evenly pb-8">
-                        <Btn text="Join" />
-                        <Btn text="Create" />
-                    </div>
-                </OptionBox>
-                <OptionBox title="Social">
-                    <h3 className="text-xl">Online Friends</h3>
-                    <ul>
-                        <li>Friend 1</li>
-                        <li>Friend 2</li>
-                        <li>Friend 3</li>
-                    </ul>
-                    <h3 className="text-xl">Your Clan</h3>
-                    <p>Clan</p>
-                </OptionBox>
+        <Layout show_banner={true}>
+            <div className="flex flex-col p-12 text-white">
+                <h1 className="text-3xl font-bold">
+                    Hello {session.data?.user.name}
+                </h1>
+                <div className="mt-12 flex justify-evenly gap-4">
+                    <OptionBox title="Tournaments">
+                        <ul>
+                            <li>Tournament 1</li>
+                            <li>Tournament 2</li>
+                            <li>Tournament 3</li>
+                        </ul>
+                    </OptionBox>
+                    <OptionBox title="Play">
+                        <div className="flex h-full flex-col items-center justify-evenly pb-8">
+                            <Btn text="Join" />
+                            <Btn text="Create" />
+                        </div>
+                    </OptionBox>
+                    <OptionBox title="Social">
+                        <h3 className="text-xl">Online Friends</h3>
+                        <ul>
+                            <li>Friend 1</li>
+                            <li>Friend 2</li>
+                            <li>Friend 3</li>
+                        </ul>
+                        <h3 className="text-xl">Your Clan</h3>
+                        <p>Clan</p>
+                    </OptionBox>
+                </div>
             </div>
-        </div>
+        </Layout>
     );
 }
 

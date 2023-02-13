@@ -1,5 +1,9 @@
+import { Layout } from "../components/layout";
+
 function Social() {
-    return <div>Social</div>;
+    return <Layout show_banner={true}>
+        <div>Social</div>;
+    </Layout>
 }
 
 export default Social;
