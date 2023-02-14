@@ -4,6 +4,7 @@ import { CardIdSchema } from "./card_tuple";
 
 
 export const VisualPlayerStateSchema = z.object({
+    id: z.string(),
     name: z.string(),
     bet: z.number(),
     you: z.boolean(),

@@ -12,8 +12,8 @@ function MultiPlayer({ tableId }: { tableId: string }) {
         VisualTableState | undefined
     >(undefined);
     const channelIdQuery = api.game.getChannelId.useQuery({ tableId });
-    const submitActionQuery = api.game.
-
+    const submitActionQuery = 
+    
     useEffect(() => {
         if (channelIdQuery.status !== "success") {
             return;
@@ -33,6 +33,7 @@ function MultiPlayer({ tableId }: { tableId: string }) {
         });
 
         return () => {
+            channel.unbind_all();
             unsubscribe(channelId);
         };
     }, [channelIdQuery.data, channelIdQuery.status]);

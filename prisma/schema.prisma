@@ -9,7 +9,7 @@ generator client {
 
 model User {
     id            String    @id @default(uuid())
-    name          String?
+    name          String
     email         String?   @unique
     emailVerified DateTime?
     image         String?
@@ -17,8 +17,7 @@ model User {
     sessions      Session[]
     createdAt     DateTime  @default(now())
     role          Role      @default(default)
-    playerId      String?   @unique
-    player        Player?   @relation(fields: [playerId], references: [user_id])
+    player        Player?
     chips         Int       @default(1000)
     friends       User[]    @relation("Friends")
     friendedBy    User[]    @relation("Friends")
@@ -60,7 +59,8 @@ model Session {
 }
 
 model Player {
-    user_id     String  @id @default(uuid())
+    id          String  @id
+    userId      String  @unique @default(uuid())
     card1       String
     card2       String
     folded      Boolean
@@ -69,7 +69,7 @@ model Player {
     channel     String
     Game        Game?   @relation(fields: [gameId], references: [id])
     gameId      String?
-    User        User    @relation(fields: [user_id], references: [id])
+    User        User    @relation(fields: [userId], references: [id])
 }
 
 model Game {
