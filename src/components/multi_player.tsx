@@ -12,6 +12,7 @@ function MultiPlayer({ tableId }: { tableId: string }) {
         VisualTableState | undefined
     >(undefined);
     const channelIdQuery = api.game.getChannelId.useQuery({ tableId });
+    const submitActionQuery = api.game.
 
     useEffect(() => {
         if (channelIdQuery.status !== "success") {

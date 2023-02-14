@@ -1,4 +1,6 @@
 import { z } from "zod";
+import { TableStateActionSchema } from "../../../scripts/table_state";
+import { prisma } from "../../db";
 
 import { createTRPCRouter, publicProcedure, protectedProcedure } from "../trpc";
 
@@ -11,7 +13,16 @@ export const gameRouter = createTRPCRouter({
             }
         }),
 
-    getSecretMessage: protectedProcedure.query(() => {
-        return "you can now see this secret message!";
-    }),
+    submitGameAction: protectedProcedure
+        .input(TableStateActionSchema)
+        .query(({ input, ctx }) => {
+            const user = ctx.session.user;
+            if (input.type == "fold") {
+                prisma.player.update({
+                    where: {
+                        id: 
+                    }
+                })
+            }
+        }) 
 });

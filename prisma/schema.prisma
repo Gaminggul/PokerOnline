@@ -17,7 +17,8 @@ model User {
     sessions      Session[]
     createdAt     DateTime  @default(now())
     role          Role      @default(default)
-    game          Game[]
+    playerId      String?   @unique
+    player        Player?   @relation(fields: [playerId], references: [user_id])
     chips         Int       @default(1000)
     friends       User[]    @relation("Friends")
     friendedBy    User[]    @relation("Friends")
@@ -59,13 +60,16 @@ model Session {
 }
 
 model Player {
-    id          String  @id @default(uuid())
+    user_id     String  @id @default(uuid())
     card1       String
     card2       String
     folded      Boolean
     chip_amount Int
     bet_amount  Int
     channel     String
+    Game        Game?   @relation(fields: [gameId], references: [id])
+    gameId      String?
+    User        User    @relation(fields: [user_id], references: [id])
 }
 
 model Game {
@@ -73,7 +77,7 @@ model Game {
     createdAt          DateTime @default(now())
     centerCards        String[]
     centerRevealAmount Int
-    player             User[]
+    player             Player[]
     currentPlayerIndex Int
     pot                Int
     cards              String[]
