@@ -20,6 +20,7 @@ const ranks = [
     ["ace", 14],
 ] as const;
 
+
 const score_map = new Map(ranks.map(([rank, score]) => [rank, score]));
 
 type RankId = (typeof ranks)[number][0];
@@ -27,6 +28,7 @@ type RankId = (typeof ranks)[number][0];
 export const cards = suits.flatMap((suit) =>
     ranks.map(([rank]) => `${suit}_${rank}` as const)
 );
+
 export type CardId = (typeof cards)[number];
 
 export type CombinationId =
@@ -101,12 +103,12 @@ function longest_consecutive_sequence(arr: number[]): number[] {
 
 type CombinationEvaluator = (cards: CardId[]) =>
     | {
-          type: "some";
-          score: number; // This is used for tie-breaking
-      }
+        type: "some";
+        score: number; // This is used for tie-breaking
+    }
     | {
-          type: "none";
-      };
+        type: "none";
+    };
 
 interface Combination {
     id: CombinationId;
@@ -313,15 +315,15 @@ export const combinations = [
 
 export type CombinationResult =
     | {
-          type: "some";
-          combination: CombinationId;
-          cards: CardId[];
-          base_score: number;
-          score: number;
-      }
+        type: "some";
+        combination: CombinationId;
+        cards: CardId[];
+        base_score: number;
+        score: number;
+    }
     | {
-          type: "none";
-      };
+        type: "none";
+    };
 
 export function get_combination(
     cards: (CardId | "hidden")[]
@@ -344,10 +346,10 @@ export function get_combination(
             };
         })
         .filter((v) => v !== undefined) as {
-        combination: CombinationId;
-        score: number;
-        base_score: number;
-    }[];
+            combination: CombinationId;
+            score: number;
+            base_score: number;
+        }[];
     if (combinations_with_cards.length === 0) {
         return {
             type: "none",

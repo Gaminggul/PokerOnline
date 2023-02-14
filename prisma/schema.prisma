@@ -59,10 +59,13 @@ model Session {
 }
 
 model Player {
-    id          String @id @default(uuid())
+    id          String  @id @default(uuid())
     card1       String
     card2       String
+    folded      Boolean
     chip_amount Int
+    bet_amount  Int
+    channel     String
 }
 
 model Game {

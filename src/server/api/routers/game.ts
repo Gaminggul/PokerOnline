@@ -2,13 +2,13 @@ import { z } from "zod";
 
 import { createTRPCRouter, publicProcedure, protectedProcedure } from "../trpc";
 
-export const exampleRouter = createTRPCRouter({
-    getChannel: protectedProcedure
+export const gameRouter = createTRPCRouter({
+    getChannelId: protectedProcedure
         .input(z.object({ tableId: z.string() }))
         .query(({ input }) => {
             return {
-                greeting: `Hello ${input.text}`,
-            };
+                channelId: "123",
+            }
         }),
 
     getSecretMessage: protectedProcedure.query(() => {

@@ -1,30 +1,41 @@
+import { z } from "zod";
 import type { CardId } from "./cards";
+import { CardIdSchema } from "./card_tuple";
 
-export interface VisualTableState {
-    tableId: string;
-    centerCards: (CardId | "hidden")[];
-    end_of_round: boolean;
-    pot: number;
-    players: VisualPlayerState[]; // order matters
-}
 
-export interface VisualPlayerState {
-    name: string;
-    bet: number;
-    you: boolean;
-    turn: boolean;
-    remainingChips: number;
-    hand: (CardId | "hidden")[] | "folded";
-}
+export const VisualPlayerStateSchema = z.object({
+    name: z.string(),
+    bet: z.number(),
+    you: z.boolean(),
+    turn: z.boolean(),
+    remainingChips: z.number(),
+    hand: z.union([z.array(z.union([CardIdSchema, z.literal("hidden")])), z.literal("folded")]),
+});
 
-export type TableStateAction =
-    | {
-          type: "fold";
-      }
-    | {
-          type: "bet";
-          bet: number;
-      };
+export type VisualPlayerState = z.infer<typeof VisualPlayerStateSchema>;
+
+
+export const VisualTableStateSchema = z.object({
+    tableId: z.string(),
+    centerCards: z.array(z.union([CardIdSchema, z.literal("hidden")])),
+    end_of_round: z.boolean(),
+    pot: z.number(),
+    players: VisualPlayerStateSchema.array(),
+});
+
+export type VisualTableState = z.infer<typeof VisualTableStateSchema>;
+
+export const TableStateActionSchema = z.union([
+    z.object({
+        type: z.literal("fold"),
+    }),
+    z.object({
+        type: z.literal("bet"),
+        bet: z.number(),
+    }),
+]);
+
+export type TableStateAction = z.infer<typeof TableStateActionSchema>;
 
 export interface TableState {
     tableId: string;

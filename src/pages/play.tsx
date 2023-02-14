@@ -33,7 +33,9 @@ function Play() {
                     <p className="text-xl">
                         If you want to join a game with your friends
                     </p>
-                    <p className="p-2 text-xl">or with strangers then join here!</p>
+                    <p className="p-2 text-xl">
+                        or with strangers then join here!
+                    </p>
                     <CAJButton text="Join Game" route="/join"></CAJButton>
                 </Column>
                 <Column>
@@ -44,7 +46,8 @@ function Play() {
                         route={`/lobby/${v4()}`}
                     ></CAJButton>
                 </Column>
-            </div></Layout>
+            </div>
+        </Layout>
     );
 }
 
