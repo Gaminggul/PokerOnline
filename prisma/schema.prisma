@@ -65,7 +65,7 @@ model Player {
     card2       String
     folded      Boolean
     chip_amount Int
-    bet_amount  Int
+    bet         Int
     channel     String
     Game        Game?   @relation(fields: [gameId], references: [id])
     gameId      String?
@@ -74,16 +74,12 @@ model Player {
 
 model Game {
     id                 String   @id @default(uuid())
-    createdAt          DateTime @default(now())
     centerCards        String[]
     centerRevealAmount Int
-    player             Player[]
+    players            Player[]
     currentPlayerIndex Int
+    betIncreaseIndex   Int
     pot                Int
-    cards              String[]
-    access             Access
-    password           String?
-    role_index         Int
 }
 
 enum Role {

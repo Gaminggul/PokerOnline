@@ -23,7 +23,7 @@ function Table({
     const player = state.players[you_index];
     return (
         <div className="flex w-full flex-col gap-8">
-            <p className="text-xs text-gray-800">Table ID: {state.tableId}</p>
+            <p className="text-xs text-gray-800">Table ID: {state.id}</p>
             <div className="flex justify-center gap-4 rounded-lg bg-slate-600 p-6">
                 {state.centerCards.map((card, i) => {
                     return (

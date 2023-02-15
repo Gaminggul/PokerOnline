@@ -2,7 +2,6 @@ import { z } from "zod";
 import type { CardId } from "./cards";
 import { CardIdSchema } from "./card_tuple";
 
-
 export const VisualPlayerStateSchema = z.object({
     id: z.string(),
     name: z.string(),
@@ -17,7 +16,7 @@ export type VisualPlayerState = z.infer<typeof VisualPlayerStateSchema>;
 
 
 export const VisualTableStateSchema = z.object({
-    tableId: z.string(),
+    id: z.string(),
     centerCards: z.array(z.union([CardIdSchema, z.literal("hidden")])),
     end_of_round: z.boolean(),
     pot: z.number(),
@@ -39,20 +38,20 @@ export const TableStateActionSchema = z.union([
 export type TableStateAction = z.infer<typeof TableStateActionSchema>;
 
 export interface TableState {
-    tableId: string;
+    id: string;
     centerCards: CardId[];
     centerRevealAmount: number;
     players: PlayerState[];
     currentPlayerIndex: number;
-    end_of_round: boolean;
-    requireBetRound: boolean;
+    betIncreaseIndex: number;
     pot: number;
-    deck: CardId[];
 }
 
 export interface PlayerState {
+    id: string;
     name: string;
-    bet: number;
-    hand: CardId[];
+    hand: [CardId, CardId];
     folded: boolean;
+    bet: number;
+    chip_amount: number;
 }

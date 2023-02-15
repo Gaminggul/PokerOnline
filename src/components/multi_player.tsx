@@ -7,18 +7,18 @@ import { api } from "../utils/api";
 import { subscribe, unsubscribe } from "../scripts/pusher";
 import Table from "./table";
 
-function MultiPlayer({ tableId }: { tableId: string }) {
+function MultiPlayer() {
     const [visualTableState, setVisualTableState] = useState<
         VisualTableState | undefined
     >(undefined);
-    const channelIdQuery = api.game.getChannelId.useQuery({ tableId });
-    const submitActionQuery = 
-    
+    const channelIdQuery = api.game.getChannelId.useQuery();
+    const submitActionQuery = api.game.submitGameAction.useMutation();
+
     useEffect(() => {
-        if (channelIdQuery.status !== "success") {
+        if (!channelIdQuery.data) {
             return;
         }
-        const channelId = channelIdQuery.data.channelId;
+        const channelId = channelIdQuery.data.channel;
         const channel = subscribe(channelId);
 
         channel.bind("update", (newData: unknown) => {
@@ -36,16 +36,14 @@ function MultiPlayer({ tableId }: { tableId: string }) {
             channel.unbind_all();
             unsubscribe(channelId);
         };
-    }, [channelIdQuery.data, channelIdQuery.status]);
+    }, [channelIdQuery.data]);
 
     return (
         <div>
             {visualTableState ? (
                 <Table
                     state={visualTableState}
-                    submit_action={(action) => {
-                        return;
-                    }}
+                    submit_action={submitActionQuery.mutate}
                 />
             ) : (
                 <div>Loading...</div>

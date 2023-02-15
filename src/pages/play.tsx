@@ -3,7 +3,6 @@ import type { PropsWithChildren } from "react";
 import CreateGame from "../../public/creategame.jpg";
 import JoinGame from "../../public/joingame.jpg";
 import Link from "next/link";
-import { v4 } from "uuid";
 import { Layout } from "../components/layout";
 
 function Play() {
@@ -41,10 +40,7 @@ function Play() {
                 <Column>
                     <h2>Play Alone</h2>
                     <p>This is just to test the game</p>
-                    <CAJButton
-                        text="Play Alone"
-                        route={`/lobby/${v4()}`}
-                    ></CAJButton>
+                    <CAJButton text="Play Alone" route={`/game`}></CAJButton>
                 </Column>
             </div>
         </Layout>
