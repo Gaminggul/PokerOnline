@@ -57,19 +57,21 @@ function from_state(state: TableState, old_game: CompleteGame): CompleteGame {
         currentPlayerIndex: state.currentPlayerIndex,
         id: state.id,
         pot: state.pot,
-        players: tuple_zip([state.players, old_game.players]).map(([p, old_p]) => ({
-            bet: p.bet,
-            folded: p.folded,
-            card1: p.hand[0],
-            card2: p.hand[1],
-            chip_amount: p.chip_amount,
-            id: old_p.id,
-            channel: old_p.channel,
-            userId: old_p.userId,
-            gameId: old_p.gameId,
-            User: old_p.User,
-        }))
-    }
+        players: tuple_zip([state.players, old_game.players]).map(
+            ([p, old_p]) => ({
+                bet: p.bet,
+                folded: p.folded,
+                card1: p.hand[0],
+                card2: p.hand[1],
+                chip_amount: p.chip_amount,
+                id: old_p.id,
+                channel: old_p.channel,
+                userId: old_p.userId,
+                gameId: old_p.gameId,
+                User: old_p.User,
+            })
+        ),
+    };
 }
 
 function to_state(game: CompleteGame): TableState {
@@ -92,7 +94,10 @@ function to_state(game: CompleteGame): TableState {
     };
 }
 
-function run_action(game: CompleteGame, action: TableStateAction): { state: TableState, end_of_game: boolean } {
+function run_action(
+    game: CompleteGame,
+    action: TableStateAction
+): { state: TableState; end_of_game: boolean } {
     const state = to_state(game);
     return compute_next_state(state, action);
 }
@@ -109,19 +114,18 @@ async function distribute_new_state(game: CompleteGame, end_of_round: boolean) {
 }
 
 export const gameRouter = createTRPCRouter({
-    getChannelId: protectedProcedure
-        .query(({ ctx }) => {
-            const user = ctx.session.user;
-            const channel = prisma.player.findUnique({
-                where: {
-                    userId: user.id,
-                },
-                select: {
-                    channel: true,
-                },
-            });
-            return channel;
-        }),
+    getChannelId: protectedProcedure.query(({ ctx }) => {
+        const user = ctx.session.user;
+        const channel = prisma.player.findUnique({
+            where: {
+                userId: user.id,
+            },
+            select: {
+                channel: true,
+            },
+        });
+        return channel;
+    }),
 
     submitGameAction: protectedProcedure
         .input(TableStateActionSchema)
@@ -142,8 +146,10 @@ export const gameRouter = createTRPCRouter({
                         },
                     },
                 },
-            })
-            const game = (unsplit ?? error("Game not found")).Game ?? error("Game not found");
+            });
+            const game =
+                (unsplit ?? error("Game not found")).Game ??
+                error("Game not found");
             const { state: new_state, end_of_game } = run_action(game, input);
             await prisma.game.update({
                 where: {
@@ -171,6 +177,9 @@ export const gameRouter = createTRPCRouter({
                     },
                 },
             });
-            await distribute_new_state(from_state(new_state, game), end_of_game);
+            await distribute_new_state(
+                from_state(new_state, game),
+                end_of_game
+            );
         }),
 });

@@ -9,11 +9,13 @@ export const VisualPlayerStateSchema = z.object({
     you: z.boolean(),
     turn: z.boolean(),
     remainingChips: z.number(),
-    hand: z.union([z.array(z.union([CardIdSchema, z.literal("hidden")])), z.literal("folded")]),
+    hand: z.union([
+        z.array(z.union([CardIdSchema, z.literal("hidden")])),
+        z.literal("folded"),
+    ]),
 });
 
 export type VisualPlayerState = z.infer<typeof VisualPlayerStateSchema>;
-
 
 export const VisualTableStateSchema = z.object({
     id: z.string(),

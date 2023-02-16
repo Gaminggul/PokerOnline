@@ -1,4 +1,3 @@
-
 import { z } from "zod";
 import { CardIdSchema } from "../card_tuple";
 
@@ -6,11 +5,7 @@ import { create_deck } from "../create_deck";
 import { get_combination, type CardId } from "../cards";
 import { cloneDeep, max } from "lodash-es";
 
-import type {
-    PlayerState,
-    TableState,
-    TableStateAction,
-} from "../table_state";
+import type { PlayerState, TableState, TableStateAction } from "../table_state";
 import { error } from "functional-utilities";
 
 export interface PlayerData {
@@ -18,7 +13,6 @@ export interface PlayerData {
     id: string;
     remainingChips: number;
 }
-
 
 export function generate_game(
     player_data: PlayerData[],
@@ -36,8 +30,8 @@ export function generate_game(
                 i === 0
                     ? small_blind_value
                     : i === 1
-                        ? small_blind_value * 2
-                        : 0,
+                    ? small_blind_value * 2
+                    : 0,
             //hand: ["spades_10", "hearts_9"],
             hand: z
                 .tuple([CardIdSchema, CardIdSchema])
@@ -103,9 +97,7 @@ function min_bet(state: Readonly<TableState>): number {
     return max(state.players.filter((p) => !p.folded).map((p) => p.bet)) ?? 0;
 }
 
-function current_player(
-    state: TableState,
-): PlayerState {
+function current_player(state: TableState): PlayerState {
     const player_state = state.players[state.currentPlayerIndex];
     if (!player_state) {
         throw new Error("Invalid player index");
@@ -114,10 +106,7 @@ function current_player(
     return player_state;
 }
 
-function by_player_id(
-    state: TableState,
-    id: string
-): PlayerState | undefined {
+function by_player_id(state: TableState, id: string): PlayerState | undefined {
     const player_state = state.players.find((player) => player.id === id);
     if (!player_state) {
         return undefined;
@@ -145,14 +134,9 @@ export function compute_next_state(
         }
     }
     let end_of_round = false;
-    ({ state, end_of_round } = compute_next_player(
-        state,
-    ));
+    ({ state, end_of_round } = compute_next_player(state));
     const is_inactive = (player: PlayerState) => {
-        return (
-            player.folded ||
-            player.chip_amount - player.bet <= 0
-        );
+        return player.folded || player.chip_amount - player.bet <= 0;
     };
     while (
         (() => {
@@ -160,23 +144,22 @@ export function compute_next_state(
                 is_inactive(current_player(state)) ||
                 state.players.filter(
                     (p) =>
-                        !is_inactive(by_player_id(state, p.id) ?? error("Invalid player id"))
+                        !is_inactive(
+                            by_player_id(state, p.id) ??
+                                error("Invalid player id")
+                        )
                 ).length <= 1
             );
         })() &&
         !end_of_round
     ) {
-        ({ state, end_of_round } = compute_next_player(
-            state,
-        ));
+        ({ state, end_of_round } = compute_next_player(state));
     }
 
     return { state, end_of_game: end_of_round };
 }
 
-function compute_next_player(
-    originalState: Readonly<TableState>,
-): {
+function compute_next_player(originalState: Readonly<TableState>): {
     state: TableState;
     end_of_round: boolean;
 } {
@@ -194,9 +177,7 @@ function compute_next_player(
     return { state, end_of_round };
 }
 
-function compute_next_center(
-    originalState: Readonly<TableState>,
-): TableState {
+function compute_next_center(originalState: Readonly<TableState>): TableState {
     let state = cloneDeep(originalState) as TableState;
     if (state.betIncreaseIndex !== 0) {
         state.betIncreaseIndex = 0;
@@ -223,9 +204,7 @@ function compute_next_center(
 //     setTableState(() => generate_game(playerData, props.tableId));
 // }, 5000);
 
-function compute_end_of_round(
-    originalState: Readonly<TableState>,
-): TableState {
+function compute_end_of_round(originalState: Readonly<TableState>): TableState {
     const state = cloneDeep(originalState) as TableState;
 
     state.centerRevealAmount = 5;
