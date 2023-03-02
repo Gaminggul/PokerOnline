@@ -1,7 +1,6 @@
 import Pusher, { type Channel } from "pusher-js";
 import { env } from "../env.mjs";
 import { useEffect, useState } from "react";
-import { error } from "functional-utilities";
 
 const PUSHER_APP_KEY = env.NEXT_PUBLIC_PUSHER_APP_KEY;
 const PUSHER_CLUSTER = env.NEXT_PUBLIC_PUSHER_CLUSTER;
@@ -11,6 +10,7 @@ let subscriptions = 0;
 
 function getPusher(): Pusher {
     if (!pusher) {
+        console.log("Creating pusher");
         pusher = new Pusher(PUSHER_APP_KEY, {
             cluster: PUSHER_CLUSTER,
         });
@@ -19,16 +19,22 @@ function getPusher(): Pusher {
 }
 
 export function subscribe(channelName: string): Channel {
+    console.log("Subscribing to channel", channelName);
     subscriptions++;
     const channel = getPusher().subscribe(channelName);
+    channel.bind_global((eventName: string, data: unknown) => {
+        console.log(`Pusher event: ${eventName}`, data);
+    });
     return channel;
 }
 
 export function unsubscribe(channelName: string): void {
+    console.log("Unsubscribing from channel", channelName);
     subscriptions--;
     getPusher().unsubscribe(channelName);
     setTimeout(() => {
         if (pusher && subscriptions === 0) {
+            console.log("Destroying pusher");
             pusher?.disconnect();
             pusher = null;
         }

@@ -6,6 +6,8 @@ import { create_pusher_server } from "../../pusher";
 import { v4 } from "uuid";
 import { error } from "functional-utilities";
 import { generate_game } from "../../../scripts/game";
+import { default as dayjs } from "dayjs";
+import { AccessSchema } from "../../../scripts/access";
 
 async function distributeLobbyUpdate(lobby: Lobby & { users: { id: string }[] }) {
     const pusher = create_pusher_server();
@@ -13,15 +15,15 @@ async function distributeLobbyUpdate(lobby: Lobby & { users: { id: string }[] })
 }
 
 export const lobbyRouter = createTRPCRouter({
-    joinPublicGame: protectedProcedure
-        .input(z.object({ size: z.union([z.number(), z.undefined()]) }))
-        .mutation(async ({ ctx }) => {
+    joinLobby: protectedProcedure
+        .input(z.object({ size: z.number(), access: AccessSchema }))
+        .mutation(async ({ ctx, input }) => {
             const user = ctx.session.user;
             const lobby = await prisma.$transaction(async (tx) => {
                 const lobby = (
                     await tx.lobby.findMany({
                         where: {
-                            access: "public",
+                            access: input.access,
                         },
                         orderBy: {
                             users: {
@@ -40,10 +42,11 @@ export const lobbyRouter = createTRPCRouter({
                     })
                 )[0];
 
+                const user_amount = lobby ? (lobby.users.length + 1) : 1;
                 if (!lobby || lobby.users.length >= lobby.size) {
                     return await tx.lobby.create({
                         data: {
-                            size: 10,
+                            size: input.size,
                             access: "public",
                             users: {
                                 connect: {
@@ -72,6 +75,7 @@ export const lobbyRouter = createTRPCRouter({
                                     id: user.id,
                                 },
                             },
+                            startAt: (user_amount > 1 || user_amount == lobby.size) ? dayjs().add(20, 'second').toDate() : undefined,
                         },
                     });
                 }
@@ -101,6 +105,11 @@ export const lobbyRouter = createTRPCRouter({
                                     name: true,
                                 },
                             },
+                            game: {
+                                select: {
+                                    id: true,
+                                }
+                            }
                         },
                     },
                 },
@@ -115,6 +124,9 @@ export const lobbyRouter = createTRPCRouter({
         }
         if (lobby.startAt > new Date()) {
             throw new Error("Lobby not ready to start (too early)");
+        }
+        if (lobby.game?.id) {
+            throw new Error("Lobby already has a game");
         }
         const generated_game = generate_game(
             lobby.users.map((u) => ({
@@ -134,7 +146,12 @@ export const lobbyRouter = createTRPCRouter({
                 players: {
                     createMany: {
                         data: generated_game.players.map((p) => ({
-                            ...p,
+                            bet: p.bet,
+                            card1: p.card1,
+                            card2: p.card2,
+                            chip_amount: p.chip_amount,
+                            id: p.id,
+                            folded: p.folded,
                             channel: v4(),
                         })),
                     },

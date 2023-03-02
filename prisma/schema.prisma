@@ -63,6 +63,7 @@ model Lobby {
     createdAt DateTime  @default(now())
     updatedAt DateTime  @updatedAt
     startAt   DateTime?
+    started   Boolean   @default(false)
     game      Game?
 }
 

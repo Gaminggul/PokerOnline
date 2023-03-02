@@ -40,7 +40,7 @@ function Play() {
                 <Column>
                     <h2>Play Alone</h2>
                     <p>This is just to test the game</p>
-                    <CAJButton text="Play Alone" route={`/game`}></CAJButton>
+                    <CAJButton text="Play Alone" route={`/sp_game`}></CAJButton>
                 </Column>
             </div>
         </Layout>

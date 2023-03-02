@@ -58,3 +58,4 @@ export interface GamePlayerData {
     bet: number;
     chip_amount: number;
 }
+
