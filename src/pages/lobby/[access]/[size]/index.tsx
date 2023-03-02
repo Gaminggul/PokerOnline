@@ -2,6 +2,7 @@ import { Access, Lobby } from "@prisma/client";
 import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
 import { api } from "../../../../utils/api";
+import { Layout } from "../../../../components/layout";
 
 type LobbyType = Lobby & {
     users: {
@@ -29,16 +30,18 @@ function Lobby() {
             );
         }
     }, [access, size]);
-    
+
     return (
-        lobby ? (
-            <LobbyPage lobby={lobby} />
-        ) : (
-            <div>
-                <h1>Loading...</h1>
-            </div>
-        )
-    )
+        <Layout show_banner={false}>
+            {lobby ? (
+                <LobbyPage lobby={lobby} />
+            ) : (
+                <div>
+                    <h1>Loading...</h1>
+                </div>
+            )}
+        </Layout>
+    );
 }
 
 function LobbyPage({ lobby }: { lobby: LobbyType }) {
