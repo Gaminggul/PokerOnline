@@ -50,6 +50,19 @@ export const lobbyRouter = createTRPCRouter({
                             channel: v4(),
                         },
                     })) as Lobby & { users: { id: string }[] };
+                } else {
+                    await tx.lobby.update({
+                        where: {
+                            id: lobby.id,
+                        },
+                        data: {
+                            users: {
+                                connect: {
+                                    id: user.id,
+                                },
+                            },
+                        },
+                    });
                 }
 
                 return lobby;
