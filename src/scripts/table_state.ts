@@ -51,9 +51,10 @@ export interface TableState {
 
 export interface PlayerState {
     id: string;
-    name: string;
-    hand: [CardId, CardId];
+    card1: CardId;
+    card2: CardId;
     folded: boolean;
     bet: number;
     chip_amount: number;
+    name: string;
 }

@@ -16,7 +16,7 @@ import { compute_next_state } from "../../../scripts/game";
 
 type CompleteGame = Game & {
     players: (Player & {
-        User: User;
+        user: User;
     })[];
 };
 
@@ -37,7 +37,7 @@ function create_visual_game_state(
                     ? [p.card1 as CardId, p.card2 as CardId]
                     : "folded"
                 : ["hidden", "hidden"],
-            name: p.User.name,
+            name: p.user.name,
             remainingChips: p.chip_amount,
             turn: i === game.currentPlayerIndex,
             you: p.id === user_id,
@@ -68,9 +68,10 @@ function from_state(state: TableState, old_game: CompleteGame): CompleteGame {
                 channel: old_p.channel,
                 userId: old_p.userId,
                 gameId: old_p.gameId,
-                User: old_p.User,
+                user: old_p.user,
             })
         ),
+        lobbyId: old_game.lobbyId,
     };
 }
 
@@ -81,7 +82,7 @@ function to_state(game: CompleteGame): TableState {
             bet: p.bet,
             folded: p.folded,
             hand: [p.card1 as CardId, p.card2 as CardId],
-            name: p.User.name,
+            name: p.user.name,
             remainingChips: p.chip_amount,
             id: p.id,
             chip_amount: p.chip_amount,
@@ -136,11 +137,11 @@ export const gameRouter = createTRPCRouter({
                     userId: user.id,
                 },
                 include: {
-                    Game: {
+                    game: {
                         include: {
                             players: {
                                 include: {
-                                    User: true,
+                                    user: true,
                                 },
                             },
                         },
@@ -148,7 +149,7 @@ export const gameRouter = createTRPCRouter({
                 },
             });
             const game =
-                (unsplit ?? error("Game not found")).Game ??
+                (unsplit ?? error("Game not found")).game ??
                 error("Game not found");
             const { state: new_state, end_of_game } = run_action(game, input);
             await prisma.game.update({

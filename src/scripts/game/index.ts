@@ -7,17 +7,19 @@ import { cloneDeep, max } from "lodash-es";
 
 import type { PlayerState, TableState, TableStateAction } from "../table_state";
 import { error } from "functional-utilities";
+import { Game, Player } from "@prisma/client";
+import { v4 } from "uuid";
 
-export interface PlayerData {
-    name: string;
+export interface PlayerData<T extends object> {
     id: string;
     remainingChips: number;
+    extra: T;
 }
 
-export function generate_game(
-    player_data: PlayerData[],
+export function generate_game<T extends object>(
+    player_data: PlayerData<T>[],
     table_id: string
-): TableState {
+): Game & { players: (Player & { extra: T })[] } {
     const deck = create_deck();
     if (player_data.length > 10) {
         throw new Error("Too many players");
@@ -25,7 +27,6 @@ export function generate_game(
     const small_blind_value = 5;
     const players = player_data.map((player, i) => {
         return {
-            name: player.name,
             bet:
                 i === 0
                     ? small_blind_value
@@ -33,13 +34,16 @@ export function generate_game(
                     ? small_blind_value * 2
                     : 0,
             //hand: ["spades_10", "hearts_9"],
-            hand: z
-                .tuple([CardIdSchema, CardIdSchema])
-                .parse(deck.splice(0, 2)),
+            card1: deck.pop() ?? error("No more cards"),
+            card2: deck.pop() ?? error("No more cards"),
             chip_amount: player.remainingChips,
             folded: false,
             id: player.id,
-        } satisfies PlayerState;
+            channel: v4(),
+            gameId: table_id,
+            userId: player.id,
+            extra: player.extra,
+        } satisfies Player & { extra: T };
     });
 
     const centerCards: CardId[] = deck.splice(0, 5);
@@ -52,13 +56,18 @@ export function generate_game(
     // ];
 
     return {
-        players,
+        players: players.map((p) => {
+            return {
+                ...p,
+            };
+        }),
         centerCards,
         centerRevealAmount: 0,
         currentPlayerIndex: 2 % players.length,
         betIncreaseIndex: 0,
         id: table_id,
         pot: 0,
+        lobbyId: table_id,
     };
 }
 

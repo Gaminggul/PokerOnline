@@ -21,7 +21,7 @@ model User {
     chips         Int       @default(1000)
     friends       User[]    @relation("Friends")
     friendedBy    User[]    @relation("Friends")
-    Lobby         Lobby?    @relation(fields: [lobbyId], references: [id])
+    lobby         Lobby?    @relation(fields: [lobbyId], references: [id])
     lobbyId       String?
 }
 
@@ -53,15 +53,17 @@ model VerificationToken {
 }
 
 model Lobby {
-    id        String   @id @default(uuid())
+    id        String    @id @default(uuid())
     name      String?
     access    Access
     ownerId   String?
     size      Int
     users     User[]
     channel   String
-    createdAt DateTime @default(now())
-    updatedAt DateTime @updatedAt
+    createdAt DateTime  @default(now())
+    updatedAt DateTime  @updatedAt
+    startAt   DateTime?
+    game      Game?
 }
 
 model Session {
@@ -81,9 +83,9 @@ model Player {
     chip_amount Int
     bet         Int
     channel     String
-    Game        Game?   @relation(fields: [gameId], references: [id])
+    game        Game?   @relation(fields: [gameId], references: [id])
     gameId      String?
-    User        User    @relation(fields: [userId], references: [id])
+    user        User    @relation(fields: [userId], references: [id])
 }
 
 model Game {
@@ -94,6 +96,8 @@ model Game {
     currentPlayerIndex Int
     betIncreaseIndex   Int
     pot                Int
+    lobby              Lobby?   @relation(fields: [lobbyId], references: [id])
+    lobbyId            String?  @unique
 }
 
 enum Role {

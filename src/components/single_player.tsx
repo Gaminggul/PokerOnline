@@ -13,18 +13,44 @@ import {
     compute_next_state,
     generate_game,
 } from "../scripts/game";
+import { CardId } from "../scripts/cards";
+
+type ExtraData = {
+    name: string;
+};
+
+function create_table_state() {
+    
+}
 
 function SinglePlayer(props: { id: string }) {
-    const [playerData, setPlayerData] = useState<PlayerData[]>(
+    const [playerData, setPlayerData] = useState<PlayerData<ExtraData>[]>(
         range(8).map((i) => ({
-            name: `Player ${i}`,
+            extra: {
+                name: `Player ${i}`,
+            },
             id: v4(),
             remainingChips: 1000,
         }))
     );
-    const [tableState, setTableState] = useState<TableState>(
-        generate_game(playerData, props.id)
-    );
+    const game = generate_game(playerData, props.id);
+    const [tableState, setTableState] = useState<TableState>({
+        betIncreaseIndex: game.betIncreaseIndex,
+        centerCards: game.centerCards as CardId[],
+        centerRevealAmount: game.centerRevealAmount,
+        currentPlayerIndex: game.currentPlayerIndex,
+        id: game.id,
+        players: game.players.map((p) => ({
+            bet: p.bet,
+            chip_amount: p.chip_amount,
+            folded: p.folded,
+            card1: p.card1,
+            card2: p.card2,
+            id: p.id,
+            name: p.extra.name,
+        })),
+        pot: game.pot,
+    });
     const [gameActive, setGameActive] = useState(true);
     function action_handler(action: TableStateAction) {
         const { state: new_state, end_of_game: end_of_round } =
@@ -56,7 +82,7 @@ function SinglePlayer(props: { id: string }) {
             you,
             turn: you && !end_of_round, // Because it's single player, you are always the current player
             remainingChips: (
-                playerData.find((p) => p.name === player.name) ??
+                playerData.find((p) => p.id === player.id) ??
                 error("Player data not found")
             ).remainingChips,
             hand: player.folded
