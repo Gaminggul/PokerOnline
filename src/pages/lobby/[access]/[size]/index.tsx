@@ -1,8 +1,9 @@
-import { Access, Lobby } from "@prisma/client";
+import { Lobby } from "@prisma/client";
 import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
 import { api } from "../../../../utils/api";
 import { Layout } from "../../../../components/layout";
+import { subscribe, unsubscribe } from "../../../../scripts/pusher";
 
 type LobbyType = Lobby & {
     users: {
@@ -16,6 +17,20 @@ function Lobby() {
     const access = router.query.access as string;
 
     const [lobby, setLobby] = useState<LobbyType | null>(null);
+
+    useEffect(() => {
+        if (lobby) {
+            const channel = subscribe(lobby.channel);
+            channel.bind("update", (newData: unknown) => {
+                setLobby(newData as LobbyType);
+            });
+            return () => {
+                channel.unbind_all();
+                unsubscribe(lobby.channel);
+            };
+        }
+    }, [lobby?.channel]);
+
     const joinPublicLobby = api.lobby.joinPublicGame.useMutation();
 
     useEffect(() => {
