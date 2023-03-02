@@ -9,7 +9,8 @@
         "lint": "next lint",
         "start": "next start",
         "updateprisma": "prisma generate && prisma db push",
-        "format": "prettier --write . --ignore-path .gitignore"
+        "format": "prettier --write . --ignore-path .gitignore",
+        "studio": "prisma studio"
     },
     "dependencies": {
         "@next-auth/prisma-adapter": "^1.0.5",
