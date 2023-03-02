@@ -1,42 +1,40 @@
 import {
-    type TableState,
+    type GameData,
     TableStateActionSchema,
     type VisualTableState,
-    type TableStateAction,
-} from "../../../scripts/table_state";
+    type PlayerAction,
+} from "../../../scripts/game_data";
 import { prisma } from "../../db";
 
 import { createTRPCRouter, protectedProcedure } from "../trpc";
 import type { Game, Player, User } from "@prisma/client";
 import { error, tuple_zip } from "functional-utilities";
-import type { CardId } from "../../../scripts/cards";
 
 import { create_pusher_server } from "../../pusher";
 import { compute_next_state } from "../../../scripts/game";
+import { CardIdSchema } from "../../../scripts/card_tuple";
+import { z } from "zod";
 
-type CompleteGame = Game & {
+type MultiPlayerGameState = Game & {
     players: (Player & {
         user: User;
     })[];
 };
 
 function create_visual_game_state(
-    game: CompleteGame,
+    game: MultiPlayerGameState,
     user_id: string,
     game_end: boolean
 ): VisualTableState {
     return {
-        centerCards: (game.centerCards as CardId[]).map((c, i) =>
+        centerCards: z.array(CardIdSchema).parse(game.centerCards).map((c, i) =>
             i < game.centerRevealAmount ? c : "hidden"
         ),
         players: game.players.map((p, i) => ({
             bet: p.bet,
             folded: p.folded,
-            hand: game_end
-                ? p.folded
-                    ? [p.card1 as CardId, p.card2 as CardId]
-                    : "folded"
-                : ["hidden", "hidden"],
+            card1: CardIdSchema.parse(p.card1),
+            card2: CardIdSchema.parse(p.card2),
             name: p.user.name,
             remainingChips: p.chip_amount,
             turn: i === game.currentPlayerIndex,
@@ -49,7 +47,7 @@ function create_visual_game_state(
     };
 }
 
-function from_state(state: TableState, old_game: CompleteGame): CompleteGame {
+function from_state(state: GameData, old_game: MultiPlayerGameState): MultiPlayerGameState {
     return {
         betIncreaseIndex: state.betIncreaseIndex,
         centerCards: state.centerCards,
@@ -61,8 +59,8 @@ function from_state(state: TableState, old_game: CompleteGame): CompleteGame {
             ([p, old_p]) => ({
                 bet: p.bet,
                 folded: p.folded,
-                card1: p.hand[0],
-                card2: p.hand[1],
+                card1: p.card1,
+                card2: p.card2,
                 chip_amount: p.chip_amount,
                 id: old_p.id,
                 channel: old_p.channel,
@@ -75,19 +73,20 @@ function from_state(state: TableState, old_game: CompleteGame): CompleteGame {
     };
 }
 
-function to_state(game: CompleteGame): TableState {
+function to_state(game: MultiPlayerGameState): GameData {
     return {
         id: game.id,
         players: game.players.map((p) => ({
             bet: p.bet,
             folded: p.folded,
-            hand: [p.card1 as CardId, p.card2 as CardId],
+            card1: CardIdSchema.parse(p.card1),
+            card2: CardIdSchema.parse(p.card2),
             name: p.user.name,
             remainingChips: p.chip_amount,
             id: p.id,
             chip_amount: p.chip_amount,
         })),
-        centerCards: game.centerCards as CardId[],
+        centerCards: z.array(CardIdSchema).parse(game.centerCards),
         centerRevealAmount: game.centerRevealAmount,
         currentPlayerIndex: game.currentPlayerIndex,
         pot: game.pot,
@@ -96,14 +95,14 @@ function to_state(game: CompleteGame): TableState {
 }
 
 function run_action(
-    game: CompleteGame,
-    action: TableStateAction
-): { state: TableState; end_of_game: boolean } {
+    game: MultiPlayerGameState,
+    action: PlayerAction
+): { state: GameData; end_of_game: boolean } {
     const state = to_state(game);
     return compute_next_state(state, action);
 }
 
-async function distribute_new_state(game: CompleteGame, end_of_round: boolean) {
+async function distribute_new_state(game: MultiPlayerGameState, end_of_round: boolean) {
     const pusher = create_pusher_server();
     await pusher.triggerBatch(
         game.players.map((p) => ({
@@ -170,8 +169,8 @@ export const gameRouter = createTRPCRouter({
                             data: {
                                 bet: p.bet,
                                 folded: p.folded,
-                                card1: p.hand[0],
-                                card2: p.hand[1],
+                                card1: p.card1,
+                                card2: p.card2,
                                 chip_amount: p.chip_amount,
                             },
                         })),

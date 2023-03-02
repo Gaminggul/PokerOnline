@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import {
     VisualTableStateSchema,
     type VisualTableState,
-} from "../scripts/table_state";
+} from "../scripts/game_data";
 import { api } from "../utils/api";
 import { subscribe, unsubscribe } from "../scripts/pusher";
 import Table from "./table";

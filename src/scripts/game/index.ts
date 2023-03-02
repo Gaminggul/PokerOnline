@@ -1,49 +1,35 @@
-import { z } from "zod";
-import { CardIdSchema } from "../card_tuple";
-
 import { create_deck } from "../create_deck";
 import { get_combination, type CardId } from "../cards";
 import { cloneDeep, max } from "lodash-es";
 
-import type { PlayerState, TableState, TableStateAction } from "../table_state";
+import type { GamePlayerData, GameData, PlayerAction } from "../game_data";
 import { error } from "functional-utilities";
-import { Game, Player } from "@prisma/client";
-import { v4 } from "uuid";
+import { type UserData } from "../user_data";
 
-export interface PlayerData<T extends object> {
-    id: string;
-    remainingChips: number;
-    extra: T;
-}
-
-export function generate_game<T extends object>(
-    player_data: PlayerData<T>[],
+export function generate_game(
+    user_data: UserData[],
     table_id: string
-): Game & { players: (Player & { extra: T })[] } {
+): GameData {
     const deck = create_deck();
-    if (player_data.length > 10) {
+    if (user_data.length > 10) {
         throw new Error("Too many players");
     }
     const small_blind_value = 5;
-    const players = player_data.map((player, i) => {
+    const players = user_data.map((user, i) => {
         return {
             bet:
                 i === 0
                     ? small_blind_value
                     : i === 1
-                    ? small_blind_value * 2
-                    : 0,
+                        ? small_blind_value * 2
+                        : 0,
             //hand: ["spades_10", "hearts_9"],
             card1: deck.pop() ?? error("No more cards"),
             card2: deck.pop() ?? error("No more cards"),
-            chip_amount: player.remainingChips,
             folded: false,
-            id: player.id,
-            channel: v4(),
-            gameId: table_id,
-            userId: player.id,
-            extra: player.extra,
-        } satisfies Player & { extra: T };
+            id: user.id,
+            chip_amount: user.chip_amount,
+        } satisfies GamePlayerData;
     });
 
     const centerCards: CardId[] = deck.splice(0, 5);
@@ -56,22 +42,17 @@ export function generate_game<T extends object>(
     // ];
 
     return {
-        players: players.map((p) => {
-            return {
-                ...p,
-            };
-        }),
+        players: players,
         centerCards,
         centerRevealAmount: 0,
         currentPlayerIndex: 2 % players.length,
         betIncreaseIndex: 0,
         id: table_id,
         pot: 0,
-        lobbyId: table_id,
     };
 }
 
-function get_winners(state: TableState): PlayerState[] | undefined {
+function get_winners(state: GameData): GamePlayerData[] | undefined {
     // winners are the players with the same highest score
     // There will only be one winner most of the time
     const possible_winners = state.players.filter((player) => !player.folded);
@@ -79,7 +60,7 @@ function get_winners(state: TableState): PlayerState[] | undefined {
         max(
             possible_winners.map((player) => {
                 const combination = get_combination(
-                    player.hand.concat(state.centerCards)
+                    [player.card1, player.card2].concat(state.centerCards)
                 );
                 return combination.type === "none"
                     ? 0
@@ -88,7 +69,7 @@ function get_winners(state: TableState): PlayerState[] | undefined {
         ) ?? 0;
     const winners = possible_winners.filter((player) => {
         const combination = get_combination(
-            player.hand.concat(state.centerCards)
+            [player.card1, player.card2].concat(state.centerCards)
         );
         return (
             combination.type !== "none" &&
@@ -102,11 +83,11 @@ function get_winners(state: TableState): PlayerState[] | undefined {
     }
 }
 
-function min_bet(state: Readonly<TableState>): number {
+function min_bet(state: Readonly<GameData>): number {
     return max(state.players.filter((p) => !p.folded).map((p) => p.bet)) ?? 0;
 }
 
-function current_player(state: TableState): PlayerState {
+function current_player(state: GameData): GamePlayerData {
     const player_state = state.players[state.currentPlayerIndex];
     if (!player_state) {
         throw new Error("Invalid player index");
@@ -115,7 +96,7 @@ function current_player(state: TableState): PlayerState {
     return player_state;
 }
 
-function by_player_id(state: TableState, id: string): PlayerState | undefined {
+function by_player_id(state: GameData, id: string): GamePlayerData | undefined {
     const player_state = state.players.find((player) => player.id === id);
     if (!player_state) {
         return undefined;
@@ -124,13 +105,13 @@ function by_player_id(state: TableState, id: string): PlayerState | undefined {
 }
 
 export function compute_next_state(
-    originalState: Readonly<TableState>,
-    action: Readonly<TableStateAction>
+    originalState: Readonly<GameData>,
+    action: Readonly<PlayerAction>
 ): {
-    state: TableState;
+    state: GameData;
     end_of_game: boolean;
 } {
-    let state = cloneDeep(originalState) as TableState;
+    let state = cloneDeep(originalState) as GameData;
 
     {
         if (action.type === "bet") {
@@ -144,7 +125,7 @@ export function compute_next_state(
     }
     let end_of_round = false;
     ({ state, end_of_round } = compute_next_player(state));
-    const is_inactive = (player: PlayerState) => {
+    const is_inactive = (player: GamePlayerData) => {
         return player.folded || player.chip_amount - player.bet <= 0;
     };
     while (
@@ -155,7 +136,7 @@ export function compute_next_state(
                     (p) =>
                         !is_inactive(
                             by_player_id(state, p.id) ??
-                                error("Invalid player id")
+                            error("Invalid player id")
                         )
                 ).length <= 1
             );
@@ -168,11 +149,11 @@ export function compute_next_state(
     return { state, end_of_game: end_of_round };
 }
 
-function compute_next_player(originalState: Readonly<TableState>): {
-    state: TableState;
+function compute_next_player(originalState: Readonly<GameData>): {
+    state: GameData;
     end_of_round: boolean;
 } {
-    let state = cloneDeep(originalState) as TableState;
+    let state = cloneDeep(originalState) as GameData;
     let end_of_round = false;
     state.currentPlayerIndex =
         (state.currentPlayerIndex + 1) % state.players.length;
@@ -186,8 +167,8 @@ function compute_next_player(originalState: Readonly<TableState>): {
     return { state, end_of_round };
 }
 
-function compute_next_center(originalState: Readonly<TableState>): TableState {
-    let state = cloneDeep(originalState) as TableState;
+function compute_next_center(originalState: Readonly<GameData>): GameData {
+    let state = cloneDeep(originalState) as GameData;
     if (state.betIncreaseIndex !== 0) {
         state.betIncreaseIndex = 0;
     } else {
@@ -213,8 +194,8 @@ function compute_next_center(originalState: Readonly<TableState>): TableState {
 //     setTableState(() => generate_game(playerData, props.tableId));
 // }, 5000);
 
-function compute_end_of_round(originalState: Readonly<TableState>): TableState {
-    const state = cloneDeep(originalState) as TableState;
+function compute_end_of_round(originalState: Readonly<GameData>): GameData {
+    const state = cloneDeep(originalState) as GameData;
 
     state.centerRevealAmount = 5;
 

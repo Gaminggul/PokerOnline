@@ -1,15 +1,15 @@
 import { z } from "zod";
 import { createTRPCRouter, protectedProcedure } from "../trpc";
 import { prisma } from "../../db";
-import { Lobby } from "@prisma/client";
+import type { Lobby } from "@prisma/client";
 import { create_pusher_server } from "../../pusher";
 import { v4 } from "uuid";
 import { error } from "functional-utilities";
 import { generate_game } from "../../../scripts/game";
 
-function distributeLobbyUpdate(lobby: Lobby & { users: { id: string }[] }) {
+async function distributeLobbyUpdate(lobby: Lobby & { users: { id: string }[] }) {
     const pusher = create_pusher_server();
-    pusher.trigger(lobby.channel, "update", lobby);
+    await pusher.trigger(lobby.channel, "update", lobby);
 }
 
 export const lobbyRouter = createTRPCRouter({
@@ -78,7 +78,7 @@ export const lobbyRouter = createTRPCRouter({
 
                 return lobby;
             });
-            distributeLobbyUpdate(lobby);
+            await distributeLobbyUpdate(lobby);
             return lobby;
         }),
     requestGameStart: protectedProcedure.mutation(async ({ ctx }) => {
@@ -98,6 +98,7 @@ export const lobbyRouter = createTRPCRouter({
                             users: {
                                 select: {
                                     id: true,
+                                    name: true,
                                 },
                             },
                         },
@@ -118,7 +119,8 @@ export const lobbyRouter = createTRPCRouter({
         const generated_game = generate_game(
             lobby.users.map((u) => ({
                 id: u.id,
-                remainingChips: 100,
+                chip_amount: 100,
+                name: u.name,
             })),
             v4()
         );
@@ -131,7 +133,10 @@ export const lobbyRouter = createTRPCRouter({
                 },
                 players: {
                     createMany: {
-                        data: generated_game.players,
+                        data: generated_game.players.map((p) => ({
+                            ...p,
+                            channel: v4(),
+                        })),
                     },
                 },
                 betIncreaseIndex: generated_game.betIncreaseIndex,
@@ -143,7 +148,7 @@ export const lobbyRouter = createTRPCRouter({
             },
         });
         const pusher = create_pusher_server();
-        pusher.trigger(lobby.channel, "start", game);
+        await pusher.trigger(lobby.channel, "start", game);
         return game;
     }),
 });

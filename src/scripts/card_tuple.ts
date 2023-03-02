@@ -54,3 +54,5 @@ export const CardIdSchema = z.union([
     z.literal("spades_king"),
     z.literal("spades_ace"),
 ]);
+
+export const CardIdsSchema = z.array(CardIdSchema);

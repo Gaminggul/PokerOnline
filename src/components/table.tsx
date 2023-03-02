@@ -3,8 +3,8 @@ import { type CardId, get_combination } from "../scripts/cards";
 import type {
     VisualPlayerState,
     VisualTableState,
-    TableStateAction,
-} from "../scripts/table_state";
+    PlayerAction,
+} from "../scripts/game_data";
 import { useEffect, useState } from "react";
 import { max } from "lodash-es";
 import { isFirefox } from "react-device-detect";
@@ -14,7 +14,7 @@ function Table({
     submit_action,
 }: {
     state: VisualTableState;
-    submit_action: (action: TableStateAction) => void;
+    submit_action: (action: PlayerAction) => void;
 }) {
     const [bet, setBet] = useState(0);
     const [betInput, setBetInput] = useState("0");
@@ -35,13 +35,12 @@ function Table({
             </div>
             <div className="flex items-center justify-evenly">
                 {(() => {
-                    const hand = player?.hand;
-                    if (hand === "folded") {
+                    if (player?.folded) {
                         return <p>Folded</p>;
                     }
-                    if (hand) {
+                    if (player?.card1 && player?.card2) {
                         const combination = get_combination(
-                            hand.concat(
+                            [player.card1, player.card2].concat(
                                 state.centerCards.filter(
                                     (card) => card !== "hidden"
                                 )
@@ -204,10 +203,10 @@ function Player({ player }: { player: VisualPlayerState }) {
             <p>Bet: {player.bet}</p>
             <p>Chips: {player.remainingChips}</p>
             <div className="flex gap-2">
-                {player.hand === "folded" ? (
+                {player.folded ? (
                     <p>Folded</p>
                 ) : (
-                    player.hand.map((card, i) => {
+                    [player.card1, player.card2].map((card, i) => {
                         return (
                             <div key={i}>
                                 <Card card={card} width={50} />

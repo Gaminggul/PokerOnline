@@ -1,9 +1,9 @@
-import { Lobby } from "@prisma/client";
 import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
 import { api } from "../../../../utils/api";
 import { Layout } from "../../../../components/layout";
 import { subscribe, unsubscribe } from "../../../../scripts/pusher";
+import { Lobby } from "@prisma/client";
 
 type LobbyType = Lobby & {
     users: {
@@ -19,7 +19,7 @@ function Lobby() {
     const [lobby, setLobby] = useState<LobbyType | null>(null);
 
     useEffect(() => {
-        if (lobby) {
+        if (lobby?.channel) {
             const channel = subscribe(lobby.channel);
             channel.bind("update", (newData: unknown) => {
                 setLobby(newData as LobbyType);
@@ -35,7 +35,7 @@ function Lobby() {
 
     useEffect(() => {
         if (access === "public") {
-            const test = joinPublicLobby.mutate(
+            joinPublicLobby.mutate(
                 { size },
                 {
                     onSuccess: (data) => {
@@ -44,7 +44,7 @@ function Lobby() {
                 }
             );
         }
-    }, [access, size]);
+    }, [access, size, joinPublicLobby]);
 
     return (
         <Layout show_banner={false}>

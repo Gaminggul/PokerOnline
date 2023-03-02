@@ -1,5 +1,6 @@
 import { error, typed_entries } from "functional-utilities";
 import { max, maxBy, sortBy, uniq } from "lodash-es";
+import { CardIdsSchema } from "./card_tuple";
 
 const suits = ["clubs", "diamonds", "hearts", "spades"] as const;
 type SuitId = (typeof suits)[number];
@@ -102,12 +103,12 @@ function longest_consecutive_sequence(arr: number[]): number[] {
 
 type CombinationEvaluator = (cards: CardId[]) =>
     | {
-          type: "some";
-          score: number; // This is used for tie-breaking
-      }
+        type: "some";
+        score: number; // This is used for tie-breaking
+    }
     | {
-          type: "none";
-      };
+        type: "none";
+    };
 
 interface Combination {
     id: CombinationId;
@@ -314,15 +315,15 @@ export const combinations = [
 
 export type CombinationResult =
     | {
-          type: "some";
-          combination: CombinationId;
-          cards: CardId[];
-          base_score: number;
-          score: number;
-      }
+        type: "some";
+        combination: CombinationId;
+        cards: CardId[];
+        base_score: number;
+        score: number;
+    }
     | {
-          type: "none";
-      };
+        type: "none";
+    };
 
 export function get_combination(
     cards: (CardId | "hidden")[]
@@ -334,7 +335,7 @@ export function get_combination(
     }
     const combinations_with_cards = combinations
         .map((combination) => {
-            const combination_cards = combination.evaluate(cards as CardId[]);
+            const combination_cards = combination.evaluate(CardIdsSchema.parse(cards));
             if (combination_cards.type === "none") {
                 return undefined;
             }
@@ -345,10 +346,10 @@ export function get_combination(
             };
         })
         .filter((v) => v !== undefined) as {
-        combination: CombinationId;
-        score: number;
-        base_score: number;
-    }[];
+            combination: CombinationId;
+            score: number;
+            base_score: number;
+        }[];
     if (combinations_with_cards.length === 0) {
         return {
             type: "none",
@@ -362,7 +363,7 @@ export function get_combination(
     return {
         type: "some",
         combination: best_combination.combination,
-        cards: cards as CardId[],
+        cards: CardIdsSchema.parse(cards),
         score: best_combination.score,
         base_score: best_combination.base_score,
     };
