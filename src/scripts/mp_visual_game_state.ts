@@ -15,22 +15,28 @@ export function create_visual_game_state(
     user_id: string,
     game_end: boolean
 ): VisualGameState {
+    const spectating = !game.players.some((p) => p.id === user_id);
     return {
         centerCards: z
             .array(CardIdSchema)
             .parse(game.centerCards)
             .map((c, i) => (i < game.centerRevealAmount ? c : "hidden")),
-        players: game.players.map((p, i) => ({
-            bet: p.bet,
-            folded: p.folded,
-            card1: CardIdSchema.parse(p.card1),
-            card2: CardIdSchema.parse(p.card2),
-            name: p.user.name,
-            remainingChips: p.chip_amount,
-            turn: i === game.currentPlayerIndex,
-            you: p.id === user_id,
-            id: p.id,
-        })),
+        players: game.players.map((p, i) => {
+            const you = p.id === user_id;
+            return {
+                bet: p.bet,
+                folded: p.folded,
+                card1:
+                    you || spectating ? CardIdSchema.parse(p.card1) : "hidden",
+                card2:
+                    you || spectating ? CardIdSchema.parse(p.card2) : "hidden",
+                name: p.user.name,
+                remainingChips: p.chip_amount,
+                turn: i === game.currentPlayerIndex,
+                you,
+                id: p.id,
+            };
+        }),
         end_of_round: game_end,
         pot: game.pot,
         id: game.id,

@@ -53,18 +53,19 @@ model VerificationToken {
 }
 
 model Lobby {
-    id        String    @id @default(uuid())
-    name      String?
-    access    Access
-    ownerId   String?
-    size      Int
-    users     User[]
-    channel   String
-    createdAt DateTime  @default(now())
-    updatedAt DateTime  @updatedAt
-    startAt   DateTime?
-    started   Boolean   @default(false)
-    game      Game?
+    id         String    @id @default(uuid())
+    name       String?
+    access     Access
+    ownerId    String?
+    size       Int
+    users      User[]
+    channel    String
+    createdAt  DateTime  @default(now())
+    updatedAt  DateTime  @updatedAt
+    startAt    DateTime?
+    started    Boolean   @default(false)
+    blindIndex Int
+    game       Game?
 }
 
 model Session {

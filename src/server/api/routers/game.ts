@@ -105,26 +105,33 @@ export const gameRouter = createTRPCRouter({
 
     getVisualGameState: protectedProcedure.query(async ({ ctx }) => {
         const user = ctx.session.user;
-        const player = await prisma.player.findUnique({
+        const lobby = await prisma.lobby.findFirst({
             where: {
-                userId: user.id,
+                users: {
+                    some: {
+                        id: user.id,
+                    }
+                }
             },
             include: {
                 game: {
                     include: {
                         players: {
                             include: {
-                                user: true,
-                            },
-                        },
-                    },
-                },
+                                user: true
+                            }
+                        }
+                    }
+                }
             },
         });
-        if (player === null) {
-            throw new Error("Not in a game");
+        if (lobby === null) {
+            throw new Error("Not in a lobby");
         }
-        return create_visual_game_state(player.game, user.id, false);
+        if (lobby.game === null) {
+            throw new Error("Game hasn't started yet");
+        }
+        return create_visual_game_state(lobby.game, user.id, false);
     }),
 
     submitGameAction: protectedProcedure

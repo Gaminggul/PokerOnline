@@ -48,7 +48,12 @@ function Lobby() {
             joinLobby.mutate(
                 { size, access },
                 {
-                    onSuccess: (data) => {
+                    onSettled: (data) => {
+                        if (!data) {
+                            console.log("Failed to join lobby");
+                            router.push("/");
+                            return;
+                        }
                         console.log(`Joined lobby ${data.access}`, data);
                         setLobby(data);
                     },
