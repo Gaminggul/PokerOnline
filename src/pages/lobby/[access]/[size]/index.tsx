@@ -6,8 +6,8 @@ import { subscribe, unsubscribe } from "../../../../scripts/pusher";
 import { Lobby } from "@prisma/client";
 import { Timer } from "../../../../components/timer";
 import {
-    type VisualTableState,
-    VisualTableStateSchema,
+    type VisualGameState,
+    VisualGameStateSchema,
 } from "../../../../scripts/game_data";
 import Table from "../../../../components/table";
 
@@ -28,8 +28,9 @@ function Lobby() {
     useEffect(() => {
         if (lobby?.channel) {
             const channel = subscribe(lobby.channel);
-            channel.bind("update", (newData: unknown) => {
-                setLobby(newData as LobbyType);
+            channel.bind("update", (newData: LobbyType) => {
+                console.log("Lobby updated", newData);
+                setLobby(newData);
             });
             return () => {
                 channel.unbind_all();
@@ -48,6 +49,7 @@ function Lobby() {
                 { size, access },
                 {
                     onSuccess: (data) => {
+                        console.log(`Joined lobby ${data.access}`, data);
                         setLobby(data);
                     },
                 }
@@ -69,40 +71,53 @@ function Lobby() {
 }
 
 function LobbyPage({ lobby }: { lobby: LobbyType }) {
-    return lobby.started ? <MultiPlayer /> : <LobbyWaitPage lobby={lobby} />;
+    return (
+        <div>
+            <p>{lobby.started}</p>
+            {lobby.started ? <MultiPlayer /> : <LobbyWaitPage lobby={lobby} />}
+        </div>
+    );
 }
 
 function LobbyWaitPage({ lobby }: { lobby: LobbyType }) {
     const requestGameStart = api.lobby.requestGameStart.useMutation();
     return (
         <div>
-            <h1>Lobby</h1>
-            <p>Access: {lobby.access}</p>
-            <p>Size: {lobby.size}</p>
-            {lobby.users.map((user) => (
-                <p key={user.id}>{JSON.stringify(user)}</p>
-            ))}
+            <div>
+                <h1>Lobby</h1>
+                <p>Access: {lobby.access}</p>
+                <p>Size: {lobby.size}</p>
+                {lobby.users.map((user) => (
+                    <p key={user.id}>{JSON.stringify(user)}</p>
+                ))}
 
-            {lobby.startAt && (
-                <p>
-                    Round starts in{" "}
-                    <Timer
-                        end_time={lobby.startAt}
-                        on_end={() => {
-                            requestGameStart.mutate();
-                        }}
-                    ></Timer>
-                </p>
-            )}
+                {lobby.startAt && (
+                    <p>
+                        Round starts in{" "}
+                        <Timer
+                            end_time={lobby.startAt}
+                            on_end={() => {
+                                requestGameStart.mutate();
+                            }}
+                        ></Timer>
+                    </p>
+                )}
+            </div>
+
+            <div>
+                <p>All:</p>
+                <pre>{JSON.stringify(lobby, null, 4)}</pre>
+            </div>
         </div>
     );
 }
 
 function MultiPlayer() {
     const [visualGameState, setVisualGameState] = useState<
-        VisualTableState | undefined
+        VisualGameState | undefined
     >(undefined);
     const channelIdQuery = api.game.getChannelId.useQuery();
+    const visualGameStateQuery = api.game.getVisualGameState.useQuery();
     const submitActionQuery = api.game.submitGameAction.useMutation();
 
     useEffect(() => {
@@ -114,7 +129,7 @@ function MultiPlayer() {
 
         channel.bind("update", (newData: unknown) => {
             const newVisualTableState =
-                VisualTableStateSchema.safeParse(newData);
+                VisualGameStateSchema.safeParse(newData);
             if (newVisualTableState.success) {
                 setVisualGameState(newVisualTableState.data);
             } else {
@@ -128,6 +143,13 @@ function MultiPlayer() {
             unsubscribe(channelId);
         };
     }, [channelIdQuery.data]);
+
+    useEffect(() => {
+        if (!visualGameStateQuery.data) {
+            return;
+        }
+        setVisualGameState(visualGameStateQuery.data);
+    }, [visualGameStateQuery.data]);
 
     return (
         <div>

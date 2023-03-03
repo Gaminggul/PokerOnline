@@ -1,7 +1,7 @@
 import { signOut, useSession } from "next-auth/react";
 import Image from "next/image";
 import Link from "next/link";
-import { PropsWithChildren } from "react";
+import { type PropsWithChildren } from "react";
 import { noop } from "../utils/common";
 
 export function Layout(props: PropsWithChildren<{ show_banner: boolean }>) {

@@ -8,8 +8,13 @@ import { error } from "functional-utilities";
 import { generate_game } from "../../../scripts/game";
 import { default as dayjs } from "dayjs";
 import { AccessSchema } from "../../../scripts/access";
+import {
+    distribute_new_state,
+} from "../../../scripts/mp_visual_game_state";
 
-async function distributeLobbyUpdate(lobby: Lobby & { users: { id: string }[] }) {
+async function distributeLobbyUpdate(
+    lobby: Lobby & { users: { id: string }[] }
+) {
     const pusher = create_pusher_server();
     await pusher.trigger(lobby.channel, "update", lobby);
 }
@@ -42,7 +47,7 @@ export const lobbyRouter = createTRPCRouter({
                     })
                 )[0];
 
-                const user_amount = lobby ? (lobby.users.length + 1) : 1;
+                const user_amount = lobby ? lobby.users.length + 1 : 1;
                 if (!lobby || lobby.users.length >= lobby.size) {
                     return await tx.lobby.create({
                         data: {
@@ -65,7 +70,7 @@ export const lobbyRouter = createTRPCRouter({
                         },
                     });
                 } else {
-                    await tx.lobby.update({
+                    return await tx.lobby.update({
                         where: {
                             id: lobby.id,
                         },
@@ -75,12 +80,21 @@ export const lobbyRouter = createTRPCRouter({
                                     id: user.id,
                                 },
                             },
-                            startAt: (user_amount > 1 || user_amount == lobby.size) ? dayjs().add(20, 'second').toDate() : undefined,
+                            startAt:
+                                user_amount > 1 || user_amount == lobby.size
+                                    ? dayjs().add(20, "second").toDate()
+                                    : undefined,
+                        },
+                        include: {
+                            users: {
+                                select: {
+                                    id: true,
+                                    name: true,
+                                },
+                            },
                         },
                     });
                 }
-
-                return lobby;
             });
             await distributeLobbyUpdate(lobby);
             return lobby;
@@ -108,8 +122,8 @@ export const lobbyRouter = createTRPCRouter({
                             game: {
                                 select: {
                                     id: true,
-                                }
-                            }
+                                },
+                            },
                         },
                     },
                 },
@@ -123,6 +137,14 @@ export const lobbyRouter = createTRPCRouter({
             throw new Error("Lobby not ready to start (start not scheduled)");
         }
         if (lobby.startAt > new Date()) {
+            console.log(
+                dayjs()
+                    .subtract(
+                        dayjs(lobby.startAt).millisecond(),
+                        "milliseconds"
+                    )
+                    .second()
+            );
             throw new Error("Lobby not ready to start (too early)");
         }
         if (lobby.game?.id) {
@@ -136,36 +158,58 @@ export const lobbyRouter = createTRPCRouter({
             })),
             v4()
         );
-        const game = await prisma.game.create({
-            data: {
-                lobby: {
-                    connect: {
-                        id: lobby.id,
+        const [game, new_lobby] = await prisma.$transaction([
+            prisma.game.create({
+                data: {
+                    lobby: {
+                        connect: {
+                            id: lobby.id,
+                        },
+                    },
+                    players: {
+                        createMany: {
+                            data: generated_game.players.map((p) => ({
+                                bet: p.bet,
+                                card1: p.card1,
+                                card2: p.card2,
+                                chip_amount: p.chip_amount,
+                                id: v4(),
+                                folded: p.folded,
+                                userId: p.id,
+                                channel: v4(),
+                            })),
+                        },
+                    },
+                    betIncreaseIndex: generated_game.betIncreaseIndex,
+                    centerCards: generated_game.centerCards,
+                    centerRevealAmount: generated_game.centerRevealAmount,
+                    currentPlayerIndex: generated_game.currentPlayerIndex,
+                    pot: generated_game.pot,
+                    id: v4(),
+                },
+                include: {
+                    players: {
+                        include: {
+                            user: true,
+                        },
                     },
                 },
-                players: {
-                    createMany: {
-                        data: generated_game.players.map((p) => ({
-                            bet: p.bet,
-                            card1: p.card1,
-                            card2: p.card2,
-                            chip_amount: p.chip_amount,
-                            id: p.id,
-                            folded: p.folded,
-                            channel: v4(),
-                        })),
-                    },
+            }),
+            prisma.lobby.update({
+                where: {
+                    id: lobby.id,
                 },
-                betIncreaseIndex: generated_game.betIncreaseIndex,
-                centerCards: generated_game.centerCards,
-                centerRevealAmount: generated_game.centerRevealAmount,
-                currentPlayerIndex: generated_game.currentPlayerIndex,
-                pot: generated_game.pot,
-                id: v4(),
-            },
-        });
-        const pusher = create_pusher_server();
-        await pusher.trigger(lobby.channel, "start", game);
+                data: {
+                    started: true,
+                },
+                include: {
+                    users: true,
+                },
+            }),
+        ]);
+
+        await distribute_new_state(game, false);
+        await distributeLobbyUpdate(new_lobby);
         return game;
     }),
 });

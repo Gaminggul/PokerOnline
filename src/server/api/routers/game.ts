@@ -1,53 +1,26 @@
 import {
     type GameData,
     TableStateActionSchema,
-    type VisualTableState,
     type PlayerAction,
 } from "../../../scripts/game_data";
 import { prisma } from "../../db";
 
 import { createTRPCRouter, protectedProcedure } from "../trpc";
-import type { Game, Player, User } from "@prisma/client";
 import { error, tuple_zip } from "functional-utilities";
 
 import { create_pusher_server } from "../../pusher";
 import { compute_next_state } from "../../../scripts/game";
 import { CardIdSchema } from "../../../scripts/card_tuple";
 import { z } from "zod";
+import {
+    type MultiPlayerGameState,
+    create_visual_game_state,
+} from "../../../scripts/mp_visual_game_state";
 
-type MultiPlayerGameState = Game & {
-    players: (Player & {
-        user: User;
-    })[];
-};
-
-function create_visual_game_state(
-    game: MultiPlayerGameState,
-    user_id: string,
-    game_end: boolean
-): VisualTableState {
-    return {
-        centerCards: z.array(CardIdSchema).parse(game.centerCards).map((c, i) =>
-            i < game.centerRevealAmount ? c : "hidden"
-        ),
-        players: game.players.map((p, i) => ({
-            bet: p.bet,
-            folded: p.folded,
-            card1: CardIdSchema.parse(p.card1),
-            card2: CardIdSchema.parse(p.card2),
-            name: p.user.name,
-            remainingChips: p.chip_amount,
-            turn: i === game.currentPlayerIndex,
-            you: p.id === user_id,
-            id: p.id,
-        })),
-        end_of_round: game_end,
-        pot: game.pot,
-        id: game.id,
-    };
-}
-
-function from_state(state: GameData, old_game: MultiPlayerGameState): MultiPlayerGameState {
+function from_state(
+    state: GameData,
+    old_game: MultiPlayerGameState
+): MultiPlayerGameState {
     return {
         betIncreaseIndex: state.betIncreaseIndex,
         centerCards: state.centerCards,
@@ -102,7 +75,10 @@ function run_action(
     return compute_next_state(state, action);
 }
 
-async function distribute_new_state(game: MultiPlayerGameState, end_of_round: boolean) {
+async function distribute_new_state(
+    game: MultiPlayerGameState,
+    end_of_round: boolean
+) {
     const pusher = create_pusher_server();
     await pusher.triggerBatch(
         game.players.map((p) => ({
@@ -125,6 +101,30 @@ export const gameRouter = createTRPCRouter({
             },
         });
         return channel;
+    }),
+
+    getVisualGameState: protectedProcedure.query(async ({ ctx }) => {
+        const user = ctx.session.user;
+        const player = await prisma.player.findUnique({
+            where: {
+                userId: user.id,
+            },
+            include: {
+                game: {
+                    include: {
+                        players: {
+                            include: {
+                                user: true,
+                            },
+                        },
+                    },
+                },
+            },
+        });
+        if (player === null) {
+            throw new Error("Not in a game");
+        }
+        return create_visual_game_state(player.game, user.id, false);
     }),
 
     submitGameAction: protectedProcedure

@@ -15,7 +15,7 @@ export function Btn({
                 onClick
                     ? () => {
                           if (typeof onClick === "string") {
-                              router.push(onClick);
+                              void router.push(onClick);
                           } else {
                               onClick();
                           }

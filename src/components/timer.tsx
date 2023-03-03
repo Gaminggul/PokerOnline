@@ -1,3 +1,4 @@
+import dayjs from "dayjs";
 import { useEffect, useState } from "react";
 
 export function Timer({
@@ -9,12 +10,15 @@ export function Timer({
 }) {
     // A timer that counts down to a given end time.
     // The timer stays at 0 after the end time and calls on_end when it reaches 0.
+    function get_remaining_time() {
+        return dayjs(end_time).subtract(dayjs().second(), "second").second()
+    }
 
-    const [time, setTime] = useState(end_time.getTime() - Date.now());
+    const [time, setTime] = useState(get_remaining_time());
 
     useEffect(() => {
         const interval = setInterval(() => {
-            const new_time = end_time.getTime() - Date.now();
+            const new_time = get_remaining_time()
             if (new_time <= 0) {
                 setTime(0);
                 void on_end?.();

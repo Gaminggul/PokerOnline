@@ -18,7 +18,7 @@ export const VisualPlayerStateSchema = z.object({
 
 export type VisualPlayerState = z.infer<typeof VisualPlayerStateSchema>;
 
-export const VisualTableStateSchema = z.object({
+export const VisualGameStateSchema = z.object({
     id: z.string(),
     centerCards: z.array(z.union([CardIdSchema, z.literal("hidden")])),
     end_of_round: z.boolean(),
@@ -26,7 +26,7 @@ export const VisualTableStateSchema = z.object({
     players: VisualPlayerStateSchema.array(),
 });
 
-export type VisualTableState = z.infer<typeof VisualTableStateSchema>;
+export type VisualGameState = z.infer<typeof VisualGameStateSchema>;
 
 export const TableStateActionSchema = z.union([
     z.object({

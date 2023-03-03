@@ -2,7 +2,7 @@ import Image from "next/image";
 import { type CardId, get_combination } from "../scripts/cards";
 import type {
     VisualPlayerState,
-    VisualTableState,
+    VisualGameState,
     PlayerAction,
 } from "../scripts/game_data";
 import { useEffect, useState } from "react";
@@ -13,7 +13,7 @@ function Table({
     state,
     submit_action,
 }: {
-    state: VisualTableState;
+    state: VisualGameState;
     submit_action: (action: PlayerAction) => void;
 }) {
     const [bet, setBet] = useState(0);

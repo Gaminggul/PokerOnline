@@ -1,5 +1,5 @@
 import { useSession } from "next-auth/react";
-import { ReactNode } from "react";
+import { type ReactNode } from "react";
 import { Btn } from "../components/btn";
 import { Layout } from "../components/layout";
 

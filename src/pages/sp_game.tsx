@@ -4,7 +4,7 @@ import SinglePlayer from "../components/single_player";
 import { useState } from "react";
 
 function Game() {
-    const [gameId, setGameId] = useState(v4);
+    const [gameId] = useState(v4);
     return (
         <Layout show_banner={false}>
             <div className="p-8">

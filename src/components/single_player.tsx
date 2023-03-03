@@ -2,7 +2,7 @@ import type {
     GameData,
     PlayerAction,
     VisualPlayerState,
-    VisualTableState,
+    VisualGameState,
 } from "../scripts/game_data";
 import { error, tuple_zip } from "functional-utilities";
 import Table from "./table";
@@ -92,7 +92,7 @@ function SinglePlayer(props: { id: string }) {
     function create_visual_table_state(
         spGameState: SinglePlayerGameState,
         end_of_round: boolean
-    ): VisualTableState {
+    ): VisualGameState {
         const game_data = spGameState.game_data;
         const table = {
             centerCards: game_data.centerCards.map((card, i) =>
@@ -109,7 +109,7 @@ function SinglePlayer(props: { id: string }) {
             id: game_data.id,
             pot: game_data.pot,
             end_of_round,
-        } satisfies VisualTableState;
+        } satisfies VisualGameState;
         return table;
     }
 
