@@ -24,6 +24,8 @@ function Lobby() {
 
     const [lobby, setLobby] = useState<LobbyType | null>(null);
     const joiningRef = useRef(false);
+    const joinLobby = api.lobby.joinLobby.useMutation();
+    const lobbyQuery = api.lobby.getLobby.useQuery();
 
     useEffect(() => {
         if (lobby?.channel) {
@@ -39,19 +41,20 @@ function Lobby() {
         }
     }, [lobby?.channel]);
 
-    const joinLobby = api.lobby.joinLobby.useMutation();
-
     useEffect(() => {
+        let schedule_update = false;
         if (access === "public" && !joiningRef.current) {
             console.log("Joining lobby");
             joiningRef.current = true;
+            schedule_update = true;
             joinLobby.mutate(
                 { size, access },
                 {
                     onSettled: (data) => {
+                        schedule_update = false;
                         if (!data) {
                             console.log("Failed to join lobby");
-                            router.push("/");
+                            void router.push("/");
                             return;
                         }
                         console.log(`Joined lobby ${data.access}`, data);
@@ -60,7 +63,20 @@ function Lobby() {
                 }
             );
         }
-    }, [access, size, joinLobby]);
+        return () => {
+            if (schedule_update) {
+                setTimeout(() => {
+                    void lobbyQuery.refetch();
+                }, 1000);
+            }
+        };
+    }, [access, size, joinLobby, lobbyQuery, router]);
+
+    useEffect(() => {
+        if (lobbyQuery.data) {
+            setLobby(lobbyQuery.data);
+        }
+    }, [lobbyQuery.data]);
 
     return (
         <Layout show_banner={false}>

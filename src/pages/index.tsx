@@ -2,6 +2,7 @@ import { useSession } from "next-auth/react";
 import { type ReactNode } from "react";
 import { Btn } from "../components/btn";
 import { Layout } from "../components/layout";
+import { api } from "../utils/api";
 
 function OptionBox(props: { title: string; children: ReactNode }) {
     return (
@@ -14,6 +15,7 @@ function OptionBox(props: { title: string; children: ReactNode }) {
 
 function Home() {
     const session = useSession();
+    const globalRoundResetMutation = api.lobby.globalRoundReset.useMutation();
     return (
         <Layout show_banner={true}>
             <div className="flex flex-col p-12 text-white">
@@ -30,8 +32,17 @@ function Home() {
                     </OptionBox>
                     <OptionBox title="Play">
                         <div className="flex h-full flex-col items-center justify-evenly pb-8">
-                            <Btn text="Join" onClick={"/lobby/public/10"} />
+                            <Btn
+                                text="Join"
+                                onClick={"/lobby/public/10"}
+                            />
                             <Btn text="Create" />
+                            <Btn
+                                text="Reset"
+                                onClick={() => {
+                                    globalRoundResetMutation.mutate();
+                                }}
+                            />
                         </div>
                     </OptionBox>
                     <OptionBox title="Social">

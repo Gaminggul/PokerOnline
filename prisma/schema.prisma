@@ -78,7 +78,6 @@ model Session {
 
 model Player {
     id          String  @id
-    userId      String  @unique @default(uuid())
     card1       String
     card2       String
     folded      Boolean
@@ -87,7 +86,7 @@ model Player {
     channel     String
     game        Game    @relation(fields: [gameId], references: [id])
     gameId      String
-    user        User    @relation(fields: [userId], references: [id])
+    user        User    @relation(fields: [id], references: [id])
 }
 
 model Game {
@@ -100,6 +99,7 @@ model Game {
     pot                Int
     lobby              Lobby    @relation(fields: [lobbyId], references: [id])
     lobbyId            String   @unique
+    ended              Boolean  @default(false)
 }
 
 enum Role {

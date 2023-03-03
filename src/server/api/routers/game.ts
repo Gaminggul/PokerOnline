@@ -6,7 +6,7 @@ import {
 import { prisma } from "../../db";
 
 import { createTRPCRouter, protectedProcedure } from "../trpc";
-import { error, tuple_zip } from "functional-utilities";
+import { error } from "functional-utilities";
 
 import { create_pusher_server } from "../../pusher";
 import { compute_next_state } from "../../../scripts/game";
@@ -16,35 +16,6 @@ import {
     type MultiPlayerGameState,
     create_visual_game_state,
 } from "../../../scripts/mp_visual_game_state";
-
-function from_state(
-    state: GameData,
-    old_game: MultiPlayerGameState
-): MultiPlayerGameState {
-    return {
-        betIncreaseIndex: state.betIncreaseIndex,
-        centerCards: state.centerCards,
-        centerRevealAmount: state.centerRevealAmount,
-        currentPlayerIndex: state.currentPlayerIndex,
-        id: state.id,
-        pot: state.pot,
-        players: tuple_zip([state.players, old_game.players]).map(
-            ([p, old_p]) => ({
-                bet: p.bet,
-                folded: p.folded,
-                card1: p.card1,
-                card2: p.card2,
-                chip_amount: p.chip_amount,
-                id: old_p.id,
-                channel: old_p.channel,
-                userId: old_p.userId,
-                gameId: old_p.gameId,
-                user: old_p.user,
-            })
-        ),
-        lobbyId: old_game.lobbyId,
-    };
-}
 
 function to_state(game: MultiPlayerGameState): GameData {
     return {
@@ -94,7 +65,7 @@ export const gameRouter = createTRPCRouter({
         const user = ctx.session.user;
         const channel = prisma.player.findUnique({
             where: {
-                userId: user.id,
+                id: user.id,
             },
             select: {
                 channel: true,
@@ -140,7 +111,7 @@ export const gameRouter = createTRPCRouter({
             const user = ctx.session.user;
             const unsplit = await prisma.player.findUnique({
                 where: {
-                    userId: user.id,
+                    id: user.id,
                 },
                 include: {
                     game: {
@@ -158,7 +129,7 @@ export const gameRouter = createTRPCRouter({
                 (unsplit ?? error("Game not found")).game ??
                 error("Game not found");
             const { state: new_state, end_of_game } = run_action(game, input);
-            await prisma.game.update({
+            const new_game = await prisma.game.update({
                 where: {
                     id: game.id,
                 },
@@ -182,10 +153,18 @@ export const gameRouter = createTRPCRouter({
                             },
                         })),
                     },
+                    ended: end_of_game,
+                },
+                include: {
+                    players: {
+                        include: {
+                            user: true,
+                        },
+                    },
                 },
             });
             await distribute_new_state(
-                from_state(new_state, game),
+                new_game,
                 end_of_game
             );
         }),

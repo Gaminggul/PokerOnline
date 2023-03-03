@@ -47,7 +47,7 @@ export const lobbyRouter = createTRPCRouter({
                     })
                 )[0];
 
-                const user_amount = lobby ? lobby.users.length + 1 : 1;
+                const user_amount = lobby ? lobby.users.filter(u => u.id !== user.id).length + 1 : 1;
                 if (!lobby || lobby.users.length >= lobby.size) {
                     return await tx.lobby.create({
                         data: {
@@ -59,6 +59,7 @@ export const lobbyRouter = createTRPCRouter({
                                 },
                             },
                             channel: v4(),
+                            blindIndex: 0,
                         },
                         include: {
                             users: {
@@ -99,6 +100,39 @@ export const lobbyRouter = createTRPCRouter({
             await distributeLobbyUpdate(lobby);
             return lobby;
         }),
+    getLobby: protectedProcedure.query(async ({ ctx }) => {
+        const user = ctx.session.user;
+        const lobby = (await prisma.user.findUnique({
+            where: {
+                id: user.id,
+            },
+            select: {
+                lobby: {
+                    include: {
+                        users: {
+                            select: {
+                                id: true,
+                                name: true,
+                            },
+                        },
+                    },
+                },
+            }
+        }))?.lobby;
+        if (!lobby) {
+            throw new Error("Not in a lobby");
+        }
+        return lobby;
+    }),
+
+    globalRoundReset: protectedProcedure.mutation(async () => {
+        // This is a global reset and only temporary
+        await prisma.$transaction([
+            prisma.player.deleteMany({}),
+            prisma.game.deleteMany({}),
+            prisma.lobby.deleteMany({}),
+        ]);
+    }),
     requestGameStart: protectedProcedure.mutation(async ({ ctx }) => {
         const userId = ctx.session.user.id;
         const user =
@@ -173,9 +207,8 @@ export const lobbyRouter = createTRPCRouter({
                                 card1: p.card1,
                                 card2: p.card2,
                                 chip_amount: p.chip_amount,
-                                id: v4(),
+                                id: p.id,
                                 folded: p.folded,
-                                userId: p.id,
                                 channel: v4(),
                             })),
                         },

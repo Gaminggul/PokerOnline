@@ -1,4 +1,4 @@
-import { useRouter } from "next/router";
+import Link from "next/link";
 
 export function Btn({
     onClick,
@@ -7,24 +7,25 @@ export function Btn({
     text: string;
     onClick?: (() => void) | string;
 }) {
-    const router = useRouter();
+    return onClick ? (
+        typeof onClick === "string" ? (
+            <Link href={onClick} className="w-full">
+                <BtnLook text={text} />
+            </Link>
+        ) : (
+            <button onClick={onClick} className="w-full">
+                <BtnLook text={text} />
+            </button>
+        )
+    ) : (
+        <BtnLook text={text} />
+    );
+}
 
+function BtnLook({ text }: { text: string }) {
     return (
-        <button
-            onClick={
-                onClick
-                    ? () => {
-                          if (typeof onClick === "string") {
-                              void router.push(onClick);
-                          } else {
-                              onClick();
-                          }
-                      }
-                    : undefined
-            }
-            className="pw-8 w-full rounded-lg bg-green-500 py-4 text-white hover:bg-green-600"
-        >
+        <div className="pw-8 w-full rounded-lg bg-green-500 py-4 text-center text-white hover:bg-green-600">
             {text}
-        </button>
+        </div>
     );
 }
