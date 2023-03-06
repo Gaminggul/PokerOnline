@@ -49,7 +49,7 @@ function Table({
                         if (combination.type === "some") {
                             return (
                                 <div className="rounded-md bg-slate-600 p-4">
-                                    <p>Your combinations</p>
+                                    <p>Your combination</p>
                                     <p>Type: {combination.combination}</p>
                                     <p>Base Score: {combination.base_score}</p>
                                     <p>Score: {combination.score}</p>
@@ -209,7 +209,7 @@ function Player({ player }: { player: VisualPlayerState }) {
                     [player.card1, player.card2].map((card, i) => {
                         return (
                             <div key={i}>
-                                <Card card={card} width={50} />
+                                <Card card={card} width={100} />
                             </div>
                         );
                     })

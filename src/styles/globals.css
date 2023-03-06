@@ -2,10 +2,8 @@
 @tailwind components;
 @tailwind utilities;
 
-@import url("https://fonts.googleapis.com/css2?family=Nunito&display=swap");
-
 * {
-    font-family: "Nunito", sans-serif;
+    font-family: 'Oxygen', sans-serif;
     color: rgb(212, 212, 212);
 }
 
