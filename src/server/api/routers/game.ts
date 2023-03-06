@@ -81,19 +81,19 @@ export const gameRouter = createTRPCRouter({
                 users: {
                     some: {
                         id: user.id,
-                    }
-                }
+                    },
+                },
             },
             include: {
                 game: {
                     include: {
                         players: {
                             include: {
-                                user: true
-                            }
-                        }
-                    }
-                }
+                                user: true,
+                            },
+                        },
+                    },
+                },
             },
         });
         if (lobby === null) {
@@ -163,9 +163,6 @@ export const gameRouter = createTRPCRouter({
                     },
                 },
             });
-            await distribute_new_state(
-                new_game,
-                end_of_game
-            );
+            await distribute_new_state(new_game, end_of_game);
         }),
 });

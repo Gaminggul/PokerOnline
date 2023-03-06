@@ -13,7 +13,7 @@ export function Layout(props: PropsWithChildren<{ show_banner: boolean }>) {
                 </div>
             ) : undefined}
             <div className="flex">
-                <main className="h-screen w-full overflow-auto bg-slate-700">
+                <main className="min-h-screen w-full overflow-auto bg-slate-700">
                     {props.children}
                 </main>
                 <Sidebar></Sidebar>

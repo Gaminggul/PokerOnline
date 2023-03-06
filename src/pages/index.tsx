@@ -32,10 +32,7 @@ function Home() {
                     </OptionBox>
                     <OptionBox title="Play">
                         <div className="flex h-full flex-col items-center justify-evenly pb-8">
-                            <Btn
-                                text="Join"
-                                onClick={"/lobby/public/10"}
-                            />
+                            <Btn text="Join" onClick={"/lobby/public/10"} />
                             <Btn text="Create" />
                             <Btn
                                 text="Reset"

@@ -8,9 +8,8 @@ import { error } from "functional-utilities";
 import { generate_game } from "../../../scripts/game";
 import { default as dayjs } from "dayjs";
 import { AccessSchema } from "../../../scripts/access";
-import {
-    distribute_new_state,
-} from "../../../scripts/mp_visual_game_state";
+import { distribute_new_state } from "../../../scripts/mp_visual_game_state";
+import { player_start_amount } from "../../../scripts/constants";
 
 async function distributeLobbyUpdate(
     lobby: Lobby & { users: { id: string }[] }
@@ -47,7 +46,9 @@ export const lobbyRouter = createTRPCRouter({
                     })
                 )[0];
 
-                const user_amount = lobby ? lobby.users.filter(u => u.id !== user.id).length + 1 : 1;
+                const user_amount = lobby
+                    ? lobby.users.filter((u) => u.id !== user.id).length + 1
+                    : 1;
                 if (!lobby || lobby.users.length >= lobby.size) {
                     return await tx.lobby.create({
                         data: {
@@ -82,7 +83,8 @@ export const lobbyRouter = createTRPCRouter({
                                 },
                             },
                             startAt:
-                                user_amount > 1 || user_amount == lobby.size
+                                user_amount > player_start_amount - 1 ||
+                                user_amount == lobby.size
                                     ? dayjs().add(20, "second").toDate()
                                     : undefined,
                         },
@@ -102,23 +104,25 @@ export const lobbyRouter = createTRPCRouter({
         }),
     getLobby: protectedProcedure.query(async ({ ctx }) => {
         const user = ctx.session.user;
-        const lobby = (await prisma.user.findUnique({
-            where: {
-                id: user.id,
-            },
-            select: {
-                lobby: {
-                    include: {
-                        users: {
-                            select: {
-                                id: true,
-                                name: true,
+        const lobby = (
+            await prisma.user.findUnique({
+                where: {
+                    id: user.id,
+                },
+                select: {
+                    lobby: {
+                        include: {
+                            users: {
+                                select: {
+                                    id: true,
+                                    name: true,
+                                },
                             },
                         },
                     },
                 },
-            }
-        }))?.lobby;
+            })
+        )?.lobby;
         if (!lobby) {
             throw new Error("Not in a lobby");
         }

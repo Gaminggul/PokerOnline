@@ -21,8 +21,8 @@ export function generate_game(
                 i === 0
                     ? small_blind_value
                     : i === 1
-                        ? small_blind_value * 2
-                        : 0,
+                    ? small_blind_value * 2
+                    : 0,
             //hand: ["spades_10", "hearts_9"],
             card1: deck.pop() ?? error("No more cards"),
             card2: deck.pop() ?? error("No more cards"),
@@ -136,7 +136,7 @@ export function compute_next_state(
                     (p) =>
                         !is_inactive(
                             by_player_id(state, p.id) ??
-                            error("Invalid player id")
+                                error("Invalid player id")
                         )
                 ).length <= 1
             );

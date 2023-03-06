@@ -10,10 +10,12 @@ import {
     VisualGameStateSchema,
 } from "../../../../scripts/game_data";
 import Table from "../../../../components/table";
+import { player_start_amount } from "../../../../scripts/constants";
 
 type LobbyType = Lobby & {
     users: {
         id: string;
+        name: string;
     }[];
 };
 
@@ -92,42 +94,42 @@ function Lobby() {
 }
 
 function LobbyPage({ lobby }: { lobby: LobbyType }) {
-    return (
-        <div>
-            <p>{lobby.started}</p>
-            {lobby.started ? <MultiPlayer /> : <LobbyWaitPage lobby={lobby} />}
-        </div>
-    );
+    return lobby.started ? <MultiPlayer /> : <LobbyWaitPage lobby={lobby} />;
 }
 
 function LobbyWaitPage({ lobby }: { lobby: LobbyType }) {
     const requestGameStart = api.lobby.requestGameStart.useMutation();
     return (
-        <div>
-            <div>
-                <h1>Lobby</h1>
-                <p>Access: {lobby.access}</p>
-                <p>Size: {lobby.size}</p>
-                {lobby.users.map((user) => (
-                    <p key={user.id}>{JSON.stringify(user)}</p>
-                ))}
-
-                {lobby.startAt && (
-                    <p>
-                        Round starts in{" "}
+        <div className="h-full flex flex-col justify-between p-8">
+            <p className="text-gray-500">Lobby - {lobby.name ?? lobby.id}</p>
+            <div className="flex flex-col gap-4">
+                <h2 className="text-center text-3xl">Players</h2>
+                <div className="flex gap-4 justify-center flex-wrap">
+                    {lobby.users.map((user) => (
+                        <div
+                            key={user.id}
+                            className="flex flex-col rounded bg-slate-800 p-4"
+                        >
+                            <p>Name: {user.name}</p>
+                            <p>ID: {user.id}</p>
+                        </div>
+                    ))}
+                </div>
+            </div>
+            <div className="flex justify-center bg-slate-200 p-8 text-2xl text-slate-800">
+                {lobby.started ? (
+                    <>Game is starting</>
+                ) : lobby.startAt ? (
+                    <>
+                        Game starts in{" "}
                         <Timer
                             end_time={lobby.startAt}
-                            on_end={() => {
-                                requestGameStart.mutate();
-                            }}
+                            on_end={requestGameStart.mutate}
                         ></Timer>
-                    </p>
+                    </>
+                ) : (
+                    <>Waiting for {player_start_amount - lobby.users.length} more players to start</>
                 )}
-            </div>
-
-            <div>
-                <p>All:</p>
-                <pre>{JSON.stringify(lobby, null, 4)}</pre>
             </div>
         </div>
     );
