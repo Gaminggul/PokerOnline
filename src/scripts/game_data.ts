@@ -24,6 +24,7 @@ export const VisualGameStateSchema = z.object({
     end_of_round: z.boolean(),
     pot: z.number(),
     players: VisualPlayerStateSchema.array(),
+    ended: z.boolean(),
 });
 
 export type VisualGameState = z.infer<typeof VisualGameStateSchema>;

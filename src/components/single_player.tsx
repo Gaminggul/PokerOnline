@@ -109,6 +109,7 @@ function SinglePlayer(props: { id: string }) {
             id: game_data.id,
             pot: game_data.pot,
             end_of_round,
+            ended: false,
         } satisfies VisualGameState;
         return table;
     }

@@ -1,1 +1,1 @@
-export const player_start_amount = 3;
+export const player_start_amount = 2;

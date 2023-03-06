@@ -46,16 +46,13 @@ function run_action(
     return compute_next_state(state, action);
 }
 
-async function distribute_new_state(
-    game: MultiPlayerGameState,
-    end_of_round: boolean
-) {
+async function distribute_new_state(game: MultiPlayerGameState) {
     const pusher = create_pusher_server();
     await pusher.triggerBatch(
         game.players.map((p) => ({
             channel: p.channel,
             name: "update",
-            data: create_visual_game_state(game, p.id, end_of_round),
+            data: create_visual_game_state(game, p.id),
         }))
     );
 }
@@ -102,7 +99,7 @@ export const gameRouter = createTRPCRouter({
         if (lobby.game === null) {
             throw new Error("Game hasn't started yet");
         }
-        return create_visual_game_state(lobby.game, user.id, false);
+        return create_visual_game_state(lobby.game, user.id);
     }),
 
     submitGameAction: protectedProcedure
@@ -163,6 +160,6 @@ export const gameRouter = createTRPCRouter({
                     },
                 },
             });
-            await distribute_new_state(new_game, end_of_game);
+            await distribute_new_state(new_game);
         }),
 });

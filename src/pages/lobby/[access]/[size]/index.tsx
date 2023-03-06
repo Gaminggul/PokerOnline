@@ -100,11 +100,11 @@ function LobbyPage({ lobby }: { lobby: LobbyType }) {
 function LobbyWaitPage({ lobby }: { lobby: LobbyType }) {
     const requestGameStart = api.lobby.requestGameStart.useMutation();
     return (
-        <div className="h-full flex flex-col justify-between p-8">
+        <div className="flex h-full flex-col justify-between p-8">
             <p className="text-gray-500">Lobby - {lobby.name ?? lobby.id}</p>
             <div className="flex flex-col gap-4">
                 <h2 className="text-center text-3xl">Players</h2>
-                <div className="flex gap-4 justify-center flex-wrap">
+                <div className="flex flex-wrap justify-center gap-4">
                     {lobby.users.map((user) => (
                         <div
                             key={user.id}
@@ -128,7 +128,10 @@ function LobbyWaitPage({ lobby }: { lobby: LobbyType }) {
                         ></Timer>
                     </>
                 ) : (
-                    <>Waiting for {player_start_amount - lobby.users.length} more players to start</>
+                    <>
+                        Waiting for {player_start_amount - lobby.users.length}{" "}
+                        more players to start
+                    </>
                 )}
             </div>
         </div>
