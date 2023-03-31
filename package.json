@@ -25,7 +25,7 @@
         "dayjs": "^1.11.7",
         "functional-utilities": "^1.20.0",
         "lodash-es": "^4.17.21",
-        "next": "13.2.3",
+        "next": "13.2.4",
         "next-auth": "^4.20.1",
         "pusher": "^5.1.2",
         "pusher-js": "^8.0.1",
