@@ -174,15 +174,14 @@ export const lobbyRouter = createTRPCRouter({
         if (!lobby.startAt) {
             throw new Error("Lobby not ready to start (start not scheduled)");
         }
-        if (lobby.startAt > new Date()) {
-            console.log(
-                dayjs()
-                    .subtract(
-                        dayjs(lobby.startAt).millisecond(),
-                        "milliseconds"
-                    )
-                    .second()
-            );
+        const time_offset = dayjs()
+            .subtract(
+                dayjs(lobby.startAt).millisecond(),
+                "milliseconds"
+            )
+            .millisecond();
+        console.log(time_offset);
+        if (time_offset > 1000) {
             throw new Error("Lobby not ready to start (too early)");
         }
         if (lobby.game?.id) {

@@ -46,7 +46,9 @@ function run_action(
     return compute_next_state(state, action);
 }
 
-async function distribute_new_state(game: MultiPlayerGameState) {
+async function distribute_new_state(
+    game: MultiPlayerGameState,
+) {
     const pusher = create_pusher_server();
     await pusher.triggerBatch(
         game.players.map((p) => ({
@@ -125,6 +127,13 @@ export const gameRouter = createTRPCRouter({
             const game =
                 (unsplit ?? error("Game not found")).game ??
                 error("Game not found");
+            if (game.ended) {
+                throw new Error("Game has ended");
+            }
+            const current_player = game.players[game.currentPlayerIndex] ?? error("Current player not found (internal error)");
+            if (current_player.id !== user.id) {
+                throw new Error("Not your turn");
+            }
             const { state: new_state, end_of_game } = run_action(game, input);
             const new_game = await prisma.game.update({
                 where: {
@@ -160,6 +169,8 @@ export const gameRouter = createTRPCRouter({
                     },
                 },
             });
-            await distribute_new_state(new_game);
+            await distribute_new_state(
+                new_game,
+            );
         }),
 });
