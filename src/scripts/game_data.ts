@@ -21,7 +21,6 @@ export type VisualPlayerState = z.infer<typeof VisualPlayerStateSchema>;
 export const VisualGameStateSchema = z.object({
     id: z.string(),
     centerCards: z.array(z.union([CardIdSchema, z.literal("hidden")])),
-    end_of_round: z.boolean(),
     pot: z.number(),
     players: VisualPlayerStateSchema.array(),
     ended: z.boolean(),
@@ -49,6 +48,7 @@ export interface GameData {
     currentPlayerIndex: number;
     betIncreaseIndex: number;
     pot: number;
+    ended: boolean;
 }
 
 export interface GamePlayerData {

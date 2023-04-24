@@ -12,7 +12,7 @@ export type MultiPlayerGameState = Game & {
 
 export function create_visual_game_state(
     game: MultiPlayerGameState,
-    user_id: string,
+    user_id: string
 ): VisualGameState {
     const spectating = !game.players.some((p) => p.id === user_id);
     const ended = game.ended;
@@ -38,13 +38,11 @@ export function create_visual_game_state(
         }),
         pot: game.pot,
         id: game.id,
-        end_of_round: game.ended,
+        ended: game.ended,
     };
 }
 
-export async function distribute_new_state(
-    game: MultiPlayerGameState,
-) {
+export async function distribute_new_state(game: MultiPlayerGameState) {
     const pusher = create_pusher_server();
     await pusher.triggerBatch(
         game.players.map((p) => ({

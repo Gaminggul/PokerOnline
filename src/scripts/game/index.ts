@@ -3,7 +3,7 @@ import { get_combination, type CardId } from "../cards";
 import { cloneDeep, max } from "lodash-es";
 
 import type { GamePlayerData, GameData, PlayerAction } from "../game_data";
-import { error } from "functional-utilities";
+import { panic } from "functional-utilities";
 import { type UserData } from "../user_data";
 
 export function generate_game(
@@ -24,8 +24,8 @@ export function generate_game(
                     ? small_blind_value * 2
                     : 0,
             //hand: ["spades_10", "hearts_9"],
-            card1: deck.pop() ?? error("No more cards"),
-            card2: deck.pop() ?? error("No more cards"),
+            card1: deck.pop() ?? panic("No more cards"),
+            card2: deck.pop() ?? panic("No more cards"),
             folded: false,
             id: user.id,
             chip_amount: user.chip_amount,
@@ -49,6 +49,7 @@ export function generate_game(
         betIncreaseIndex: 0,
         id: table_id,
         pot: 0,
+        ended: false,
     };
 }
 
@@ -107,10 +108,7 @@ function by_player_id(state: GameData, id: string): GamePlayerData | undefined {
 export function compute_next_state(
     originalState: Readonly<GameData>,
     action: Readonly<PlayerAction>
-): {
-    state: GameData;
-    end_of_game: boolean;
-} {
+): GameData {
     let state = cloneDeep(originalState) as GameData;
 
     {
@@ -123,8 +121,7 @@ export function compute_next_state(
             current_player(state).folded = true;
         }
     }
-    let end_of_round = false;
-    ({ state, end_of_round } = compute_next_player(state));
+    state = compute_next_player(state);
     const is_inactive = (player: GamePlayerData) => {
         return player.folded || player.chip_amount - player.bet <= 0;
     };
@@ -136,35 +133,30 @@ export function compute_next_state(
                     (p) =>
                         !is_inactive(
                             by_player_id(state, p.id) ??
-                                error("Invalid player id")
+                                panic("Invalid player id")
                         )
                 ).length <= 1
             );
         })() &&
-        !end_of_round
+        !state.ended
     ) {
-        ({ state, end_of_round } = compute_next_player(state));
+        state = compute_next_player(state);
     }
 
-    return { state, end_of_game: end_of_round };
+    return state;
 }
 
-function compute_next_player(originalState: Readonly<GameData>): {
-    state: GameData;
-    end_of_round: boolean;
-} {
+function compute_next_player(originalState: Readonly<GameData>): GameData {
     let state = cloneDeep(originalState) as GameData;
-    let end_of_round = false;
     state.currentPlayerIndex =
         (state.currentPlayerIndex + 1) % state.players.length;
 
     if (state.players.filter((p) => !p.folded).length <= 1) {
-        state = compute_end_of_round(state);
-        end_of_round = true;
+        state = compute_ended(state);
     } else if (state.currentPlayerIndex === 0) {
         state = compute_next_center(state);
     }
-    return { state, end_of_round };
+    return state;
 }
 
 function compute_next_center(originalState: Readonly<GameData>): GameData {
@@ -184,7 +176,7 @@ function compute_next_center(originalState: Readonly<GameData>): GameData {
         }
         if (state.centerRevealAmount === 6) {
             state.centerRevealAmount = 5;
-            state = compute_end_of_round(state);
+            state = compute_ended(state);
         }
     }
     return state;
@@ -194,7 +186,7 @@ function compute_next_center(originalState: Readonly<GameData>): GameData {
 //     setTableState(() => generate_game(playerData, props.tableId));
 // }, 5000);
 
-function compute_end_of_round(originalState: Readonly<GameData>): GameData {
+function compute_ended(originalState: Readonly<GameData>): GameData {
     const state = cloneDeep(originalState) as GameData;
 
     state.centerRevealAmount = 5;
@@ -207,5 +199,6 @@ function compute_end_of_round(originalState: Readonly<GameData>): GameData {
             winner.chip_amount += winner_pot;
         });
     }
+    state.ended = true;
     return state;
 }

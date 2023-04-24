@@ -23,7 +23,9 @@ function Table({
     const player = state.players[you_index];
     return (
         <div className="flex w-full flex-col gap-8">
-            <p className="text-xs text-gray-800">Table ID: {state.id}, Ended: {state.ended ? "Ended" : "Not end"}</p>
+            <p className="text-xs text-gray-800">
+                Table ID: {state.id}, Ended: {state.ended ? "Ended" : "Not end"}
+            </p>
             <div className="flex justify-center gap-4 rounded-lg bg-slate-600 p-6">
                 {state.centerCards.map((card, i) => {
                     return (
@@ -66,7 +68,7 @@ function Table({
                     }
                 })()}
                 {/* Es muss noch ein "Check" button hin */}
-                {state.players[you_index]?.turn && !state.end_of_round ? (
+                {state.players[you_index]?.turn && !state.ended ? (
                     <div className="flex items-center gap-8 rounded-md bg-slate-600 p-4">
                         <UiButton
                             onClick={() => submit_action({ type: "fold" })}

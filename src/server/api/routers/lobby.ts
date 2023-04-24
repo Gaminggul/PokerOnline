@@ -4,7 +4,7 @@ import { prisma } from "../../db";
 import type { Lobby } from "@prisma/client";
 import { create_pusher_server } from "../../pusher";
 import { v4 } from "uuid";
-import { error } from "functional-utilities";
+import { panic } from "functional-utilities";
 import { generate_game } from "../../../scripts/game";
 import { default as dayjs } from "dayjs";
 import { AccessSchema } from "../../../scripts/access";
@@ -165,7 +165,7 @@ export const lobbyRouter = createTRPCRouter({
                         },
                     },
                 },
-            })) ?? error("User not found");
+            })) ?? panic("User not found");
 
         const lobby = user.lobby;
         if (!lobby) {
@@ -175,10 +175,7 @@ export const lobbyRouter = createTRPCRouter({
             throw new Error("Lobby not ready to start (start not scheduled)");
         }
         const time_offset = dayjs()
-            .subtract(
-                dayjs(lobby.startAt).millisecond(),
-                "milliseconds"
-            )
+            .subtract(dayjs(lobby.startAt).millisecond(), "milliseconds")
             .millisecond();
         console.log(time_offset);
         if (time_offset > 1000) {

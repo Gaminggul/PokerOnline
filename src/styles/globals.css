@@ -3,7 +3,7 @@
 @tailwind utilities;
 
 * {
-    font-family: 'Oxygen', sans-serif;
+    font-family: "Oxygen", sans-serif;
     color: rgb(212, 212, 212);
 }
 

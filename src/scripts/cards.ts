@@ -1,4 +1,4 @@
-import { error, typed_entries } from "functional-utilities";
+import { panic, typed_entries } from "functional-utilities";
 import { max, maxBy, sortBy, uniq } from "lodash-es";
 import { CardIdsSchema } from "./card_tuple";
 
@@ -70,7 +70,7 @@ function get_card_score(card: CardId): number {
 }
 
 function get_rank_score(rank: RankId): number {
-    return score_map.get(rank) ?? error(`Invalid card rank: ${rank}`);
+    return score_map.get(rank) ?? panic(`Invalid card rank: ${rank}`);
 }
 
 function sort_cards_by_rank(cards: CardId[]): CardId[] {
@@ -85,7 +85,7 @@ function longest_consecutive_sequence(arr: number[]): number[] {
     for (const num of arr) {
         if (
             current.length === 0 ||
-            num === (current.at(-1) ?? error("out of bounds")) + 1
+            num === (current.at(-1) ?? panic("out of bounds")) + 1
         ) {
             current.push(num);
         } else {
@@ -146,7 +146,7 @@ function rank_evaluate(rank_amounts: number[]): CombinationEvaluator {
                             [v[0], get_rank_score(v[1][0])] as [number, number]
                     ),
                     ([, score]) => score
-                ) ?? error("No best rank");
+                ) ?? panic("No best rank");
             remaining_sorted_ranks.splice(best_rank[0], 1);
             score += best_rank[1] * rank_amount;
         }
@@ -169,7 +169,7 @@ export const combinations = [
             }
             return {
                 type: "some",
-                score: max(cards.map(get_card_score)) ?? error("No cards"),
+                score: max(cards.map(get_card_score)) ?? panic("No cards"),
             };
         },
         base_score: 1,
@@ -202,7 +202,7 @@ export const combinations = [
             }
             return {
                 type: "some",
-                score: max(longest) ?? error("No cards"),
+                score: max(longest) ?? panic("No cards"),
             };
         },
         base_score: 5,
@@ -220,13 +220,13 @@ export const combinations = [
                 };
             }
             const sorted_suits = sortBy(valid_suits, (cards) =>
-                get_card_score(cards[0] ?? error("No cards"))
+                get_card_score(cards[0] ?? panic("No cards"))
             );
             const combination_cards = sorted_suits[0]?.slice(0, 5);
             return {
                 type: "some",
                 score: get_card_score(
-                    combination_cards?.[0] ?? error("No cards")
+                    combination_cards?.[0] ?? panic("No cards")
                 ),
             };
         },
@@ -265,9 +265,9 @@ export const combinations = [
                 score:
                     max(
                         valid_suit_sequences.map(
-                            ([, sequence]) => max(sequence) ?? error("No cards")
+                            ([, sequence]) => max(sequence) ?? panic("No cards")
                         )
-                    ) ?? error("No cards"),
+                    ) ?? panic("No cards"),
             };
         },
         base_score: 9,
@@ -281,7 +281,7 @@ export const combinations = [
                     const sorted_cards = sort_cards_by_rank(cards);
                     if (
                         parse_card(
-                            sorted_cards.at(-1) ?? error("No cards")
+                            sorted_cards.at(-1) ?? panic("No cards")
                         )?.[1] !== "ace"
                     ) {
                         return [];
@@ -304,9 +304,9 @@ export const combinations = [
                 score:
                     max(
                         valid_suit_sequences.map(
-                            ([, sequence]) => max(sequence) ?? error("No cards")
+                            ([, sequence]) => max(sequence) ?? panic("No cards")
                         )
-                    ) ?? error("No cards"),
+                    ) ?? panic("No cards"),
             };
         },
         base_score: 10,
@@ -361,7 +361,7 @@ export function get_combination(
         maxBy(
             combinations_with_cards,
             (combination) => combination.base_score
-        ) ?? error("No combinations");
+        ) ?? panic("No combinations");
     return {
         type: "some",
         combination: best_combination.combination,

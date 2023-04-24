@@ -4,7 +4,7 @@ import type {
     VisualPlayerState,
     VisualGameState,
 } from "../scripts/game_data";
-import { error, tuple_zip } from "functional-utilities";
+import { panic, tuple_zip } from "functional-utilities";
 import Table from "./table";
 import { useState } from "react";
 import { v4 } from "uuid";
@@ -34,18 +34,16 @@ function SinglePlayer(props: { id: string }) {
         game_data: generate_game(start_user_data, v4()),
         user_data: start_user_data,
     });
-    const [gameActive, setGameActive] = useState(true);
 
     function get_user(playerId: string): UserData {
         return (
             spGameState.user_data.find((p) => p.id === playerId) ??
-            error("Player not found")
+            panic("Player not found")
         );
     }
     function action_handler(action: PlayerAction) {
-        const { state: new_game_data, end_of_game: end_of_round } =
-            compute_next_state(spGameState.game_data, action);
-        const new_user_data = end_of_round
+        const new_game_data = compute_next_state(spGameState.game_data, action);
+        const new_user_data = new_game_data.ended
             ? tuple_zip([spGameState.user_data, new_game_data.players]).map(
                   ([player, new_player]) => ({
                       ...player,
@@ -57,29 +55,26 @@ function SinglePlayer(props: { id: string }) {
             game_data: new_game_data,
             user_data: new_user_data,
         });
-        setGameActive(!end_of_round);
-        if (end_of_round) {
+        if (new_game_data.ended) {
             setTimeout(() => {
                 setSpGameState((spGameState) => ({
                     game_data: generate_game(spGameState.user_data, props.id),
                     user_data: spGameState.user_data,
                 }));
-                setGameActive(true);
             }, 3000);
         }
     }
     function create_visual_player_state(
         player: GameData["players"][number],
-        user_data: UserData[],
         index: number,
-        end_of_round: boolean
+        ended: boolean
     ): VisualPlayerState {
         const you = index === spGameState.game_data.currentPlayerIndex;
-        const show_cards = you || end_of_round;
+        const show_cards = you || ended;
         const user = get_user(player.id);
         return {
             you,
-            turn: you && !end_of_round, // Because it's single player, you are always the current player
+            turn: you && !ended, // Because it's single player, you are always the current player
             remainingChips: player.chip_amount,
             card1: show_cards ? player.card1 : "hidden",
             card2: show_cards ? player.card2 : "hidden",
@@ -90,8 +85,7 @@ function SinglePlayer(props: { id: string }) {
         };
     }
     function create_visual_table_state(
-        spGameState: SinglePlayerGameState,
-        end_of_round: boolean
+        spGameState: SinglePlayerGameState
     ): VisualGameState {
         const game_data = spGameState.game_data;
         const table = {
@@ -99,17 +93,11 @@ function SinglePlayer(props: { id: string }) {
                 i < game_data.centerRevealAmount ? card : "hidden"
             ),
             players: game_data.players.map((p, i) =>
-                create_visual_player_state(
-                    p,
-                    spGameState.user_data,
-                    i,
-                    end_of_round
-                )
+                create_visual_player_state(p, i, spGameState.game_data.ended)
             ),
             id: game_data.id,
             pot: game_data.pot,
-            end_of_round,
-            ended: false,
+            ended: spGameState.game_data.ended,
         } satisfies VisualGameState;
         return table;
     }
@@ -118,7 +106,7 @@ function SinglePlayer(props: { id: string }) {
         <div className="flex w-full">
             <Table
                 submit_action={action_handler}
-                state={create_visual_table_state(spGameState, !gameActive)}
+                state={create_visual_table_state(spGameState)}
             />
             {/* <div className="w-[300px] text-xs">
                 <p>State</p>
