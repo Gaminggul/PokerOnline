@@ -90,16 +90,16 @@ model Player {
 }
 
 model Game {
-    id                 String   @id @default(uuid())
+    id                 String    @id @default(uuid())
     centerCards        String[]
     centerRevealAmount Int
     players            Player[]
     currentPlayerIndex Int
     betIncreaseIndex   Int
     pot                Int
-    lobby              Lobby    @relation(fields: [lobbyId], references: [id])
-    lobbyId            String   @unique
-    ended              Boolean  @default(false)
+    lobby              Lobby     @relation(fields: [lobbyId], references: [id])
+    lobbyId            String    @unique
+    restartAt          DateTime?
 }
 
 enum Role {
