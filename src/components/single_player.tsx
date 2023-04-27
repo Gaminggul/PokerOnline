@@ -10,6 +10,7 @@ import { useState } from "react";
 import { v4 } from "uuid";
 import { compute_next_state, generate_game } from "../scripts/game";
 import { type UserData } from "../scripts/user_data";
+import dayjs from "dayjs";
 
 interface SinglePlayerGameState {
     game_data: GameData;
@@ -43,7 +44,7 @@ function SinglePlayer(props: { id: string }) {
     }
     function action_handler(action: PlayerAction) {
         const new_game_data = compute_next_state(spGameState.game_data, action);
-        const new_user_data = new_game_data.ended
+        const new_user_data = new_game_data.restartAt
             ? tuple_zip([spGameState.user_data, new_game_data.players]).map(
                   ([player, new_player]) => ({
                       ...player,
@@ -55,14 +56,6 @@ function SinglePlayer(props: { id: string }) {
             game_data: new_game_data,
             user_data: new_user_data,
         });
-        if (new_game_data.ended) {
-            setTimeout(() => {
-                setSpGameState((spGameState) => ({
-                    game_data: generate_game(spGameState.user_data, props.id),
-                    user_data: spGameState.user_data,
-                }));
-            }, 3000);
-        }
     }
     function create_visual_player_state(
         player: GameData["players"][number],
@@ -93,26 +86,30 @@ function SinglePlayer(props: { id: string }) {
                 i < game_data.centerRevealAmount ? card : "hidden"
             ),
             players: game_data.players.map((p, i) =>
-                create_visual_player_state(p, i, spGameState.game_data.ended)
+                create_visual_player_state(
+                    p,
+                    i,
+                    !!spGameState.game_data.restartAt
+                )
             ),
             id: game_data.id,
             pot: game_data.pot,
-            ended: spGameState.game_data.ended,
+            restartAt: spGameState.game_data.restartAt?.getTime(),
         } satisfies VisualGameState;
         return table;
     }
 
     return (
-        <div className="flex w-full">
-            <Table
-                submit_action={action_handler}
-                state={create_visual_table_state(spGameState)}
-            />
-            {/* <div className="w-[300px] text-xs">
-                <p>State</p>
-                <pre>{JSON.stringify(tableState, null, 2)}</pre>
-            </div> */}
-        </div>
+        <Table
+            submit_action={action_handler}
+            state={create_visual_table_state(spGameState)}
+            restart_action={() => {
+                setSpGameState((spGameState) => ({
+                    game_data: generate_game(spGameState.user_data, props.id),
+                    user_data: spGameState.user_data,
+                }));
+            }}
+        />
     );
 }
 

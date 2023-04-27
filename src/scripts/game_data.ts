@@ -23,7 +23,7 @@ export const VisualGameStateSchema = z.object({
     centerCards: z.array(z.union([CardIdSchema, z.literal("hidden")])),
     pot: z.number(),
     players: VisualPlayerStateSchema.array(),
-    ended: z.boolean(),
+    restartAt: z.number().optional(),
 });
 
 export type VisualGameState = z.infer<typeof VisualGameStateSchema>;
@@ -48,7 +48,7 @@ export interface GameData {
     currentPlayerIndex: number;
     betIncreaseIndex: number;
     pot: number;
-    ended: boolean;
+    restartAt: Date | undefined;
 }
 
 export interface GamePlayerData {

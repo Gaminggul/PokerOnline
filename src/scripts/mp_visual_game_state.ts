@@ -15,7 +15,7 @@ export function create_visual_game_state(
     user_id: string
 ): VisualGameState {
     const spectating = !game.players.some((p) => p.id === user_id);
-    const ended = game.ended;
+    const ended = !!game.restartAt;
     return {
         centerCards: z
             .array(CardIdSchema)
@@ -38,7 +38,7 @@ export function create_visual_game_state(
         }),
         pot: game.pot,
         id: game.id,
-        ended: game.ended,
+        restartAt: game.restartAt ? game.restartAt.getTime() : undefined,
     };
 }
 

@@ -9,7 +9,7 @@ import { createTRPCRouter, protectedProcedure } from "../trpc";
 import { panic } from "functional-utilities";
 
 import { create_pusher_server } from "../../pusher";
-import { compute_next_state } from "../../../scripts/game";
+import { compute_next_state, generate_game } from "../../../scripts/game";
 import { CardIdSchema } from "../../../scripts/card_tuple";
 import { z } from "zod";
 import {
@@ -35,7 +35,7 @@ function to_state(game: MultiPlayerGameState): GameData {
         currentPlayerIndex: game.currentPlayerIndex,
         pot: game.pot,
         betIncreaseIndex: game.betIncreaseIndex,
-        ended: game.ended,
+        restartAt: game.restartAt ? game.restartAt : undefined,
     };
 }
 
@@ -103,6 +103,62 @@ export const gameRouter = createTRPCRouter({
         return create_visual_game_state(lobby.game, user.id);
     }),
 
+    requestGameRestart: protectedProcedure.mutation(async ({ ctx }) => {
+        const user = ctx.session.user;
+        const lobby =
+            (await prisma.player.findUnique({
+                where: {
+                    id: user.id,
+                },
+                include: {
+                    game: {
+                        include: {
+                            players: true,
+                        },
+                    },
+                },
+            })) ?? panic("Lobby not found");
+        if (!lobby.game.restartAt) {
+            throw new Error("Restart not scheduled");
+        }
+        const generated_game = generate_game(lobby.game.players, lobby.game.id);
+        const new_game = await prisma.game.update({
+            where: {
+                id: lobby.game.id,
+            },
+            data: {
+                betIncreaseIndex: generated_game.betIncreaseIndex,
+                centerCards: generated_game.centerCards,
+                centerRevealAmount: generated_game.centerRevealAmount,
+                currentPlayerIndex: generated_game.currentPlayerIndex,
+                pot: generated_game.pot,
+                restartAt: null,
+                players: {
+                    updateMany: generated_game.players.map((p) => ({
+                        where: {
+                            id: p.id,
+                        },
+                        data: {
+                            bet: p.bet,
+                            card1: p.card1,
+                            card2: p.card2,
+                            chip_amount: p.chip_amount,
+                            folded: p.folded,
+                        },
+                    })),
+                },
+            },
+            include: {
+                players: {
+                    include: {
+                        user: true,
+                    },
+                },
+            },
+        });
+        await distribute_new_state(new_game);
+    }),
+
     submitGameAction: protectedProcedure
         .input(TableStateActionSchema)
         .mutation(async ({ input, ctx }) => {
@@ -126,7 +182,7 @@ export const gameRouter = createTRPCRouter({
             const game =
                 (unsplit ?? panic("Game not found")).game ??
                 panic("Game not found");
-            if (game.ended) {
+            if (game.restartAt) {
                 throw new Error("Game has ended");
             }
             const current_player =
@@ -141,11 +197,6 @@ export const gameRouter = createTRPCRouter({
                     id: game.id,
                 },
                 data: {
-                    betIncreaseIndex: new_state.betIncreaseIndex,
-                    centerCards: new_state.centerCards,
-                    centerRevealAmount: new_state.centerRevealAmount,
-                    currentPlayerIndex: new_state.currentPlayerIndex,
-                    pot: new_state.pot,
                     players: {
                         updateMany: new_state.players.map((p) => ({
                             where: {
@@ -153,14 +204,19 @@ export const gameRouter = createTRPCRouter({
                             },
                             data: {
                                 bet: p.bet,
-                                folded: p.folded,
                                 card1: p.card1,
                                 card2: p.card2,
                                 chip_amount: p.chip_amount,
+                                folded: p.folded,
                             },
                         })),
                     },
-                    ended: new_state.ended,
+                    betIncreaseIndex: new_state.betIncreaseIndex,
+                    centerCards: new_state.centerCards,
+                    centerRevealAmount: new_state.centerRevealAmount,
+                    currentPlayerIndex: new_state.currentPlayerIndex,
+                    pot: new_state.pot,
+                    restartAt: new_state.restartAt,
                 },
                 include: {
                     players: {

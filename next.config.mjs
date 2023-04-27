@@ -6,7 +6,6 @@
  */
 !process.env.SKIP_ENV_VALIDATION && (await import("./src/env.mjs"));
 
-
 /**
  * Run lokal function in `dev` mode
  */

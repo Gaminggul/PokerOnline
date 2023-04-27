@@ -5,9 +5,10 @@ import { cloneDeep, max } from "lodash-es";
 import type { GamePlayerData, GameData, PlayerAction } from "../game_data";
 import { panic } from "functional-utilities";
 import { type UserData } from "../user_data";
+import dayjs from "dayjs";
 
 export function generate_game(
-    user_data: UserData[],
+    user_data: { id: string; chip_amount: number }[],
     table_id: string
 ): GameData {
     const deck = create_deck();
@@ -49,7 +50,7 @@ export function generate_game(
         betIncreaseIndex: 0,
         id: table_id,
         pot: 0,
-        ended: false,
+        restartAt: undefined,
     };
 }
 
@@ -138,7 +139,7 @@ export function compute_next_state(
                 ).length <= 1
             );
         })() &&
-        !state.ended
+        !state.restartAt
     ) {
         state = compute_next_player(state);
     }
@@ -199,6 +200,6 @@ function compute_ended(originalState: Readonly<GameData>): GameData {
             winner.chip_amount += winner_pot;
         });
     }
-    state.ended = true;
+    state.restartAt = dayjs().add(5, "second").toDate();
     return state;
 }
