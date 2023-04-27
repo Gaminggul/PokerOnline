@@ -11,17 +11,17 @@ function connect() {
     const websocket = new WebSocket(
         `${url}?secret=${secret}&value=${path}&filter=contains`
     );
-    websocket.on("message",async (/** @type {string} */ data) => {
+    websocket.on("message", async (/** @type {string} */ data) => {
         await superagent.post(`localhost:3000/api/${path}`).send(data);
     });
-    websocket.on("error",(/** @type {any} */ err) => {
+    websocket.on("error", (/** @type {any} */ err) => {
         throw err;
     });
-    websocket.on("close",() => {
+    websocket.on("close", () => {
         console.log("Connection closed, reconnecting...");
-        setTimeout(connect,1000);
+        websocket.removeAllListeners();
+        setTimeout(connect, 1000);
     });
 }
 
 connect();
-
