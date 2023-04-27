@@ -241,8 +241,8 @@ export const lobbyRouter = createTRPCRouter({
             }),
         ]);
 
-        await distribute_new_state(game);
         await distributeLobbyUpdate(new_lobby);
+        await distribute_new_state(game);
         return game;
     }),
 });

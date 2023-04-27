@@ -27,6 +27,8 @@ const server = z.object({
     GITHUB_CLIENT_ID: z.string(),
     GITHUB_CLIENT_SECRET: z.string(),
     PUSHER_SECRET: z.string().min(1),
+    PROXY_URL: z.string().url(),
+    PROXY_SECRET: z.string().min(1),
 });
 
 /**
@@ -61,6 +63,8 @@ const processEnv = {
     NEXT_PUBLIC_PUSHER_APP_ID: process.env.NEXT_PUBLIC_PUSHER_APP_ID,
     NEXT_PUBLIC_PUSHER_APP_KEY: process.env.NEXT_PUBLIC_PUSHER_APP_KEY,
     NEXT_PUBLIC_PUSHER_CLUSTER: process.env.NEXT_PUBLIC_PUSHER_CLUSTER,
+    PROXY_URL: process.env.PROXY_URL,
+    PROXY_SECRET: process.env.PROXY_SECRET,
     // NEXT_PUBLIC_CLIENTVAR: process.env.NEXT_PUBLIC_CLIENTVAR,
 };
 

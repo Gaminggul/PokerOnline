@@ -8,13 +8,16 @@ import type {
 import { useEffect, useState } from "react";
 import { max } from "lodash-es";
 import { isFirefox } from "react-device-detect";
+import { Timer } from "./timer";
 
 function Table({
     state,
     submit_action,
+    restart_action,
 }: {
     state: VisualGameState;
     submit_action: (action: PlayerAction) => void;
+    restart_action: () => void;
 }) {
     const [bet, setBet] = useState(0);
     const [betInput, setBetInput] = useState("0");
@@ -22,9 +25,10 @@ function Table({
     const you_index = state.players.findIndex((player) => player.you);
     const player = state.players[you_index];
     return (
-        <div className="flex w-full flex-col gap-8">
+        <div className="flex w-full h-full flex-col gap-8 relative">
             <p className="text-xs text-gray-800">
-                Table ID: {state.id}, Ended: {state.ended ? "Ended" : "Not end"}
+                Table ID: {state.id}, Ended:{" "}
+                {state.restartAt ? "Ended" : "Not end"}
             </p>
             <div className="flex justify-center gap-4 rounded-lg bg-slate-600 p-6">
                 {state.centerCards.map((card, i) => {
@@ -67,8 +71,7 @@ function Table({
                         }
                     }
                 })()}
-                {/* Es muss noch ein "Check" button hin */}
-                {state.players[you_index]?.turn && !state.ended ? (
+                {state.players[you_index]?.turn && !state.restartAt ? (
                     <div className="flex items-center gap-8 rounded-md bg-slate-600 p-4">
                         <UiButton
                             onClick={() => submit_action({ type: "fold" })}
@@ -164,6 +167,14 @@ function Table({
                     );
                 })}
             </div>
+            {state.restartAt ? (
+                <div className="absolute flex h-full w-full text-8xl items-center justify-center bg-black bg-opacity-30">
+                    <Timer
+                        end_time={new Date(state.restartAt)}
+                        on_end={restart_action}
+                    ></Timer>
+                </div>
+            ) : null}
         </div>
     );
 }

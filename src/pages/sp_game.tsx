@@ -7,13 +7,11 @@ function Game() {
     const [gameId] = useState(v4);
     return (
         <Layout show_banner={false}>
-            <div className="p-8">
-                {gameId && typeof gameId === "string" ? (
-                    <SinglePlayer id={gameId} />
-                ) : (
-                    <div>Game not found</div>
-                )}
-            </div>
+            {gameId && typeof gameId === "string" ? (
+                <SinglePlayer id={gameId} />
+            ) : (
+                <div>Game not found</div>
+            )}
         </Layout>
     );
 }

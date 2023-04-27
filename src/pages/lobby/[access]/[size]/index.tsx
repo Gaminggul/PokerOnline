@@ -145,6 +145,7 @@ function MultiPlayer() {
     const channelIdQuery = api.game.getChannelId.useQuery();
     const visualGameStateQuery = api.game.getVisualGameState.useQuery();
     const submitActionQuery = api.game.submitGameAction.useMutation();
+    const requestGameRestart = api.game.requestGameRestart.useMutation();
 
     useEffect(() => {
         if (!channelIdQuery.data) {
@@ -178,11 +179,12 @@ function MultiPlayer() {
     }, [visualGameStateQuery.data]);
 
     return (
-        <div>
+        <div className="h-full">
             {visualGameState ? (
                 <Table
                     state={visualGameState}
                     submit_action={submitActionQuery.mutate}
+                    restart_action={requestGameRestart.mutate}
                 />
             ) : (
                 <div>Loading...</div>
