@@ -34,4 +34,5 @@ function connect() {
     });
 }
 
+console.log("Connecting to proxy...");
 connect();

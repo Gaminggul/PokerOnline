@@ -10,7 +10,8 @@
         "start": "next start",
         "updateprisma": "prisma generate --data-proxy && dotenv -e .env.node prisma db push",
         "format": "prettier --write . --ignore-path .gitignore",
-        "studio": "dotenv -e .env.node prisma studio"
+        "studio": "dotenv -e .env.node prisma studio",
+        "socket": "dotenv tsx ./src/socket.ts"
     },
     "dependencies": {
         "@next-auth/prisma-adapter": "^1.0.6",
@@ -58,6 +59,7 @@
         "prisma": "^4.13.0",
         "superagent": "^8.0.9",
         "tailwindcss": "^3.3.1",
+        "tsx": "^3.12.6",
         "type-fest": "^3.8.0",
         "typescript": "^5.0.4",
         "ws": "^8.13.0"
