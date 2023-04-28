@@ -4,7 +4,6 @@ import { cloneDeep, max } from "lodash-es";
 
 import type { GamePlayerData, GameData, PlayerAction } from "../game_data";
 import { panic } from "functional-utilities";
-import { type UserData } from "../user_data";
 import dayjs from "dayjs";
 
 export function generate_game(

@@ -10,7 +10,6 @@ import { useState } from "react";
 import { v4 } from "uuid";
 import { compute_next_state, generate_game } from "../scripts/game";
 import { type UserData } from "../scripts/user_data";
-import dayjs from "dayjs";
 
 interface SinglePlayerGameState {
     game_data: GameData;

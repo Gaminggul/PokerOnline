@@ -25,7 +25,7 @@ function Table({
     const you_index = state.players.findIndex((player) => player.you);
     const player = state.players[you_index];
     return (
-        <div className="flex w-full h-full flex-col gap-8 relative">
+        <div className="relative flex h-full w-full flex-col gap-8">
             <p className="text-xs text-gray-800">
                 Table ID: {state.id}, Ended:{" "}
                 {state.restartAt ? "Ended" : "Not end"}
@@ -168,7 +168,7 @@ function Table({
                 })}
             </div>
             {state.restartAt ? (
-                <div className="absolute flex h-full w-full text-8xl items-center justify-center bg-black bg-opacity-30">
+                <div className="absolute flex h-full w-full items-center justify-center bg-black bg-opacity-30 text-8xl">
                     <Timer
                         end_time={new Date(state.restartAt)}
                         on_end={restart_action}
