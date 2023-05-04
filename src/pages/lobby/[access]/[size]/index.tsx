@@ -2,15 +2,16 @@ import { useRouter } from "next/router";
 import { useEffect, useRef, useState } from "react";
 import { api } from "../../../../utils/api";
 import { Layout } from "../../../../components/layout";
-import { subscribe, unsubscribe } from "../../../../scripts/pusher";
+import { subscribe, unsubscribe } from "../../../../code/pusher";
 import { Lobby } from "@prisma/client";
 import { Timer } from "../../../../components/timer";
 import {
     type VisualGameState,
     VisualGameStateSchema,
-} from "../../../../scripts/game_data";
+} from "../../../../code/game_data";
 import Table from "../../../../components/table";
-import { player_start_amount } from "../../../../scripts/constants";
+import { player_start_amount } from "../../../../code/constants";
+import { useSession } from "next-auth/react";
 
 type LobbyType = Lobby & {
     users: {
@@ -28,6 +29,8 @@ function Lobby() {
     const joiningRef = useRef(false);
     const joinLobby = api.lobby.joinLobby.useMutation();
     const lobbyQuery = api.lobby.getLobby.useQuery();
+    const pongMutation = api.lobby.pong.useMutation();
+    const { data: session } = useSession({ required: true });
 
     useEffect(() => {
         if (lobby?.channel) {
@@ -35,6 +38,16 @@ function Lobby() {
             channel.bind("update", (newData: LobbyType) => {
                 console.log("Lobby updated", newData);
                 setLobby(newData);
+            });
+            channel.bind("ping", (id: string) => {
+                if (!session) {
+                    throw new Error("Session not found");
+                }
+                if (id !== session.user.id) {
+                    return;
+                }
+                console.log("Pong");
+                pongMutation.mutate();
             });
             return () => {
                 channel.unbind_all();

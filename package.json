@@ -8,10 +8,10 @@
         "postinstall": "prisma generate --data-proxy",
         "lint": "next lint",
         "start": "next start",
-        "updateprisma": "prisma generate --data-proxy && dotenv -e .env.node prisma db push",
+        "updateprisma": "prisma generate --data-proxy && dotenv -e .env.node -- prisma db push --skip-generate",
         "format": "prettier --write . --ignore-path .gitignore",
-        "studio": "dotenv -e .env.node prisma studio",
-        "socket": "dotenv tsx ./src/socket.ts"
+        "studio": "dotenv -e .env.node -- prisma studio",
+        "socket": "dotenv -- cargo run --release --bin socket"
     },
     "dependencies": {
         "@next-auth/prisma-adapter": "^1.0.6",

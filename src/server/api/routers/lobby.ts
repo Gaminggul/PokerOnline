@@ -5,11 +5,11 @@ import type { Lobby } from "@prisma/client";
 import { create_pusher_server } from "../../pusher";
 import { v4 } from "uuid";
 import { panic } from "functional-utilities";
-import { generate_game } from "../../../scripts/game";
+import { generate_game } from "../../../code/game";
 import { default as dayjs } from "dayjs";
-import { AccessSchema } from "../../../scripts/access";
-import { distribute_new_state } from "../../../scripts/mp_visual_game_state";
-import { player_start_amount } from "../../../scripts/constants";
+import { AccessSchema } from "../../../code/access";
+import { distribute_new_state } from "../../../code/mp_visual_game_state";
+import { player_start_amount } from "../../../code/constants";
 
 async function distributeLobbyUpdate(
     lobby: Lobby & { users: { id: string }[] }
@@ -19,6 +19,18 @@ async function distributeLobbyUpdate(
 }
 
 export const lobbyRouter = createTRPCRouter({
+    pong: protectedProcedure.mutation(async ({ ctx }) => {
+        const user = ctx.session.user;
+        await prisma.user.update({
+            where: {
+                id: user.id,
+            },
+            data: {
+                timeout: null,
+            },
+        });
+        console.log("Got Pong");
+    }),
     joinLobby: protectedProcedure
         .input(z.object({ size: z.number(), access: AccessSchema }))
         .mutation(async ({ ctx, input }) => {
@@ -59,7 +71,7 @@ export const lobbyRouter = createTRPCRouter({
                                     id: user.id,
                                 },
                             },
-                            channel: v4(),
+                            channel: `lobby-${v4()}`,
                             blindIndex: 0,
                         },
                         include: {
@@ -209,7 +221,7 @@ export const lobbyRouter = createTRPCRouter({
                                 chip_amount: p.chip_amount,
                                 id: p.id,
                                 folded: p.folded,
-                                channel: v4(),
+                                channel: `player-${v4()}`,
                             })),
                         },
                     },

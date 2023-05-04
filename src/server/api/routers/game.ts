@@ -2,20 +2,20 @@ import {
     type GameData,
     TableStateActionSchema,
     type PlayerAction,
-} from "../../../scripts/game_data";
+} from "../../../code/game_data";
 import { prisma } from "../../db";
 
 import { createTRPCRouter, protectedProcedure } from "../trpc";
 import { panic } from "functional-utilities";
 
 import { create_pusher_server } from "../../pusher";
-import { compute_next_state, generate_game } from "../../../scripts/game";
-import { CardIdSchema } from "../../../scripts/card_tuple";
+import { compute_next_state, generate_game } from "../../../code/game";
+import { CardIdSchema } from "../../../code/card_tuple";
 import { z } from "zod";
 import {
     type MultiPlayerGameState,
     create_visual_game_state,
-} from "../../../scripts/mp_visual_game_state";
+} from "../../../code/mp_visual_game_state";
 
 function to_state(game: MultiPlayerGameState): GameData {
     return {

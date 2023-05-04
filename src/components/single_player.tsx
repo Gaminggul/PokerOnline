@@ -3,13 +3,13 @@ import type {
     PlayerAction,
     VisualPlayerState,
     VisualGameState,
-} from "../scripts/game_data";
+} from "../code/game_data";
 import { panic, tuple_zip } from "functional-utilities";
 import Table from "./table";
 import { useState } from "react";
 import { v4 } from "uuid";
-import { compute_next_state, generate_game } from "../scripts/game";
-import { type UserData } from "../scripts/user_data";
+import { compute_next_state, generate_game } from "../code/game";
+import { type UserData } from "../code/user_data";
 
 interface SinglePlayerGameState {
     game_data: GameData;

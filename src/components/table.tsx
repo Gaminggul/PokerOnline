@@ -1,10 +1,10 @@
 import Image from "next/image";
-import { type CardId, get_combination } from "../scripts/cards";
+import { type CardId, get_combination } from "../code/cards";
 import type {
     VisualPlayerState,
     VisualGameState,
     PlayerAction,
-} from "../scripts/game_data";
+} from "../code/game_data";
 import { useEffect, useState } from "react";
 import { max } from "lodash-es";
 import { isFirefox } from "react-device-detect";

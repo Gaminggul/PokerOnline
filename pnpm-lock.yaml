@@ -78,6 +78,9 @@ dependencies:
     version: 3.21.4
 
 devDependencies:
+  '@digitak/esrun':
+    specifier: ^3.2.24
+    version: 3.2.24
   '@types/node':
     specifier: ^18.16.0
     version: 18.16.0
@@ -152,6 +155,20 @@ packages:
     engines: {node: '>=6.9.0'}
     dependencies:
       regenerator-runtime: 0.13.11
+
+  /@digitak/esrun@3.2.24:
+    resolution: {integrity: sha512-HvD1eSuZVBaFZpKU/kl2rzDELCAbAnrFO2in855IrX15Zji4sdrekiEQph+eq5W5xjCyc254zx/Bh8RM2216mg==}
+    engines: {node: '>=14.0'}
+    hasBin: true
+    dependencies:
+      '@digitak/grubber': 3.1.4
+      chokidar: 3.5.3
+      esbuild: 0.17.18
+    dev: true
+
+  /@digitak/grubber@3.1.4:
+    resolution: {integrity: sha512-pqsnp2BUYlDoTXWG34HWgEJse/Eo1okRgNex8IG84wHrJp8h3SakeR5WhB4VxSA2+/D+frNYJ0ch3yXzsfNDoA==}
+    dev: true
 
   /@esbuild-kit/cjs-loader@2.4.2:
     resolution: {integrity: sha512-BDXFbYOJzT/NBEtp71cvsrGPwGAMGRB/349rwKuoxNSiKjPraNNnlK6MIIabViCjqZugu6j+xeMDlEkWdHHJSg==}
