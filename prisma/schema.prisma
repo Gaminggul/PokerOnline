@@ -67,6 +67,7 @@ model Lobby {
     started    Boolean   @default(false)
     blindIndex Int
     game       Game?
+    gameId     String?
 }
 
 model Session {
@@ -85,7 +86,7 @@ model Player {
     chip_amount Int
     bet         Int
     channel     String  @unique
-    game        Game    @relation(fields: [gameId], references: [id])
+    game        Game    @relation(fields: [gameId], references: [id], onDelete: Cascade)
     gameId      String
     user        User    @relation(fields: [id], references: [id])
 }
@@ -98,7 +99,7 @@ model Game {
     currentPlayerIndex Int
     betIncreaseIndex   Int
     pot                Int
-    lobby              Lobby     @relation(fields: [lobbyId], references: [id])
+    lobby              Lobby     @relation(fields: [lobbyId], references: [id], onDelete: Cascade)
     lobbyId            String    @unique
     restartAt          DateTime?
 }

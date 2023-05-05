@@ -3,7 +3,7 @@ import type { NextApiHandler } from "next";
 import { prisma } from "../../server/db";
 import superagent from "superagent";
 import { z } from "zod";
-import { TimerObjectSchema } from "../../code/timer_obj";
+import type { TimerObjectSchema } from "../../code/timer_obj";
 import { v4 } from "uuid";
 import { panic } from "functional-utilities";
 
@@ -31,29 +31,11 @@ async function handle_event(event: PusherExistence["events"][number]) {
     console.log("Setting timeout for channel", event.channel);
     if (event.channel.startsWith("lobby")) {
         console.log("Deleting lobby");
-        await prisma.$transaction([
-            prisma.player.deleteMany({
-                where: {
-                    game: {
-                        lobby: {
-                            channel: event.channel,
-                        },
-                    },
-                },
-            }),
-            prisma.game.deleteMany({
-                where: {
-                    lobby: {
-                        channel: event.channel,
-                    },
-                },
-            }),
-            prisma.lobby.delete({
-                where: {
-                    channel: event.channel,
-                },
-            }),
-        ]);
+        await prisma.lobby.delete({
+            where: {
+                channel: event.channel,
+            },
+        }) // deleting a lobby cascades to deleting the players and game
         return;
     }
     if (!event.channel.startsWith("player")) {
