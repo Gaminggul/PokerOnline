@@ -3,47 +3,69 @@ import { useEffect, useRef, useState } from "react";
 import { api } from "../../../../utils/api";
 import { Layout } from "../../../../components/layout";
 import { subscribe, unsubscribe } from "../../../../code/pusher";
-import { Lobby } from "@prisma/client";
 import { Timer } from "../../../../components/timer";
 import {
     type VisualGameState,
     VisualGameStateSchema,
+    type VisualLobbyState,
+    VisualLobbyStateSchema,
 } from "../../../../code/game_data";
 import Table from "../../../../components/table";
 import { player_start_amount } from "../../../../code/constants";
 import { useSession } from "next-auth/react";
+import { createJsonSchema } from "../../../../utils/json_util";
 
-type LobbyType = Lobby & {
-    users: {
-        id: string;
-        name: string;
-    }[];
-};
+type Comparator<T> = (prev: T, next: T) => boolean;
+
+function useConditionalMemo<T>(
+    getValue: () => T,
+    shouldUpdate: Comparator<T> = (prev, next) => prev !== next
+): T {
+    const [value, setValue] = useState<T>(getValue());
+    const prevValue = useRef<T>(value);
+
+    useEffect(() => {
+        const newValue = getValue();
+        if (shouldUpdate(prevValue.current, newValue)) {
+            setValue(newValue);
+            prevValue.current = newValue;
+        }
+    }, [getValue, shouldUpdate]);
+
+    return value;
+}
 
 function Lobby() {
     const router = useRouter();
     const size = parseInt(router.query.size as string);
     const access = router.query.access as string;
 
-    const [lobby, setLobby] = useState<LobbyType | null>(null);
+    const [lobby, setLobby] = useState<VisualLobbyState | null>(null);
     const joiningRef = useRef(false);
     const joinLobby = api.lobby.joinLobby.useMutation();
     const lobbyQuery = api.lobby.getLobby.useQuery();
     const pongMutation = api.lobby.pong.useMutation();
+
+    const channel_name = useConditionalMemo(
+        () => lobby?.channel,
+        (prev, next) => {
+            return prev !== next;
+        }
+    );
+
     const { data: session } = useSession({ required: true });
 
     useEffect(() => {
-        if (lobby?.channel) {
-            const channel = subscribe(lobby.channel);
-            channel.bind("update", (newData: LobbyType) => {
+        if (channel_name) {
+            const channel = subscribe(channel_name);
+            channel.bind("update", (newData: unknown) => {
+                setLobby(
+                    createJsonSchema(VisualLobbyStateSchema).parse(newData)
+                );
                 console.log("Lobby updated", newData);
-                setLobby(newData);
             });
             channel.bind("ping", (id: string) => {
-                if (!session) {
-                    throw new Error("Session not found");
-                }
-                if (id !== session.user.id) {
+                if (id !== session?.user?.id) {
                     return;
                 }
                 console.log("Pong");
@@ -51,10 +73,10 @@ function Lobby() {
             });
             return () => {
                 channel.unbind_all();
-                unsubscribe(lobby.channel);
+                unsubscribe(channel_name);
             };
         }
-    }, [lobby?.channel]);
+    }, [channel_name, pongMutation]);
 
     useEffect(() => {
         let schedule_update = false;
@@ -106,11 +128,15 @@ function Lobby() {
     );
 }
 
-function LobbyPage({ lobby }: { lobby: LobbyType }) {
-    return lobby.started ? <MultiPlayer /> : <LobbyWaitPage lobby={lobby} />;
+function LobbyPage({ lobby }: { lobby: VisualLobbyState }) {
+    return lobby.game_started ? (
+        <MultiPlayer />
+    ) : (
+        <LobbyWaitPage lobby={lobby} />
+    );
 }
 
-function LobbyWaitPage({ lobby }: { lobby: LobbyType }) {
+function LobbyWaitPage({ lobby }: { lobby: VisualLobbyState }) {
     const requestGameStart = api.lobby.requestGameStart.useMutation();
     return (
         <div className="flex h-full flex-col justify-between p-8">
@@ -130,7 +156,7 @@ function LobbyWaitPage({ lobby }: { lobby: LobbyType }) {
                 </div>
             </div>
             <div className="flex justify-center bg-slate-200 p-8 text-2xl text-slate-800">
-                {lobby.started ? (
+                {lobby.game_started ? (
                     <>Game is starting</>
                 ) : lobby.startAt ? (
                     <>
@@ -152,6 +178,7 @@ function LobbyWaitPage({ lobby }: { lobby: LobbyType }) {
 }
 
 function MultiPlayer() {
+    const router = useRouter();
     const [visualGameState, setVisualGameState] = useState<
         VisualGameState | undefined
     >(undefined);
@@ -164,7 +191,7 @@ function MultiPlayer() {
         if (!channelIdQuery.data) {
             return;
         }
-        const channelId = channelIdQuery.data.channel;
+        const channelId = channelIdQuery.data;
         const channel = subscribe(channelId);
 
         channel.bind("update", (newData: unknown) => {
@@ -185,10 +212,17 @@ function MultiPlayer() {
     }, [channelIdQuery.data]);
 
     useEffect(() => {
-        if (!visualGameStateQuery.data) {
+        const data = visualGameStateQuery.data;
+        if (!data) {
             return;
+        } else if (data === "lobby_not_started") {
+            console.warn("Lobby not started, might just be desync");
+        } else if (data === "not_in_lobby") {
+            console.log("Not in lobby, redirecting");
+            void router.push("/");
+        } else {
+            setVisualGameState(data);
         }
-        setVisualGameState(visualGameStateQuery.data);
     }, [visualGameStateQuery.data]);
 
     return (

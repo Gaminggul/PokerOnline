@@ -19,7 +19,6 @@ function getPusher(): Pusher {
 }
 
 export function subscribe(channelName: string): Channel {
-    console.log("Subscribing to channel", channelName);
     subscriptions++;
     const channel = getPusher().subscribe(channelName);
     channel.bind_global((eventName: string, data: unknown) => {
@@ -29,7 +28,6 @@ export function subscribe(channelName: string): Channel {
 }
 
 export function unsubscribe(channelName: string): void {
-    console.log("Unsubscribing from channel", channelName);
     subscriptions--;
     getPusher().unsubscribe(channelName);
     setTimeout(() => {
@@ -38,7 +36,7 @@ export function unsubscribe(channelName: string): void {
             pusher?.disconnect();
             pusher = null;
         }
-    }, 0); // This is delayed to unsubscribe only destroys if no new subscriptions are made
+    }, 0); // This is delayed so unsubscribe only destroys if no new subscriptions are made
 }
 
 export function useChannel(

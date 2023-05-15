@@ -26,7 +26,7 @@ async function handle_event(event: PusherExistence["events"][number]) {
     if (event.name === "channel_occupied") {
         return;
     }
-    const timeout_time = dayjs().add(30, "second").toDate();
+    const timeout_time = dayjs().add(5, "second").toDate();
 
     console.log("Setting timeout for channel", event.channel);
     if (event.channel.startsWith("lobby")) {
@@ -35,33 +35,30 @@ async function handle_event(event: PusherExistence["events"][number]) {
             where: {
                 channel: event.channel,
             },
-        }) // deleting a lobby cascades to deleting the players and game
+        }); // deleting a lobby cascades to deleting the players and game
         return;
     }
     if (!event.channel.startsWith("player")) {
         panic("Invalid channel name");
     }
-    const player = await prisma.player.update({
+    const user = await prisma.user.update({
         where: {
             channel: event.channel,
         },
         data: {
-            user: {
-                update: {
-                    timeout: timeout_time,
-                },
-            },
+            timeout: timeout_time,
         },
-        include: {
-            user: {
-                select: {
-                    id: true,
-                },
-            },
+        select: {
+            id: true,
+            player: true,
         },
     });
+    if (!user.player) {
+        console.log("Player already deleted");
+        return;
+    }
     const data: z.infer<typeof TimerObjectSchema> = {
-        user_id: player.user.id,
+        user_id: user.id,
         purpose: "disconnect",
         date: timeout_time,
         id: v4(),

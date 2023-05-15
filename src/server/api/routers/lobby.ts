@@ -1,22 +1,13 @@
 import { z } from "zod";
 import { createTRPCRouter, protectedProcedure } from "../trpc";
 import { prisma } from "../../db";
-import type { Lobby } from "@prisma/client";
-import { create_pusher_server } from "../../pusher";
 import { v4 } from "uuid";
 import { panic } from "functional-utilities";
-import { generate_game } from "../../../code/game";
 import { default as dayjs } from "dayjs";
 import { AccessSchema } from "../../../code/access";
-import { distribute_new_state } from "../../../code/mp_visual_game_state";
 import { player_start_amount } from "../../../code/constants";
-
-async function distributeLobbyUpdate(
-    lobby: Lobby & { users: { id: string }[] }
-) {
-    const pusher = create_pusher_server();
-    await pusher.trigger(lobby.channel, "update", lobby);
-}
+import { MPGameState } from "../../../code/classes/mp_game_state";
+import { MPLobby } from "../../../code/classes/mp_lobby";
 
 export const lobbyRouter = createTRPCRouter({
     pong: protectedProcedure.mutation(async ({ ctx }) => {
@@ -47,12 +38,7 @@ export const lobbyRouter = createTRPCRouter({
                             },
                         },
                         include: {
-                            users: {
-                                select: {
-                                    id: true,
-                                    name: true,
-                                },
-                            },
+                            users: true,
                         },
                         take: 1,
                     })
@@ -75,12 +61,7 @@ export const lobbyRouter = createTRPCRouter({
                             blindIndex: 0,
                         },
                         include: {
-                            users: {
-                                select: {
-                                    id: true,
-                                    name: true,
-                                },
-                            },
+                            users: true,
                         },
                     });
                 } else {
@@ -101,18 +82,17 @@ export const lobbyRouter = createTRPCRouter({
                                     : undefined,
                         },
                         include: {
-                            users: {
-                                select: {
-                                    id: true,
-                                    name: true,
-                                },
-                            },
+                            users: true,
                         },
                     });
                 }
             });
-            await distributeLobbyUpdate(lobby);
-            return lobby;
+            const mp_lobby = new MPLobby({
+                ...lobby,
+                game: undefined,
+            });
+            await mp_lobby.distribute();
+            return mp_lobby.visualize();
         }),
     getLobby: protectedProcedure.query(async ({ ctx }) => {
         const user = ctx.session.user;
@@ -124,10 +104,14 @@ export const lobbyRouter = createTRPCRouter({
                 select: {
                     lobby: {
                         include: {
-                            users: {
-                                select: {
-                                    id: true,
-                                    name: true,
+                            users: true,
+                            game: {
+                                include: {
+                                    players: {
+                                        include: {
+                                            user: true,
+                                        },
+                                    },
                                 },
                             },
                         },
@@ -138,16 +122,13 @@ export const lobbyRouter = createTRPCRouter({
         if (!lobby) {
             throw new Error("Not in a lobby");
         }
-        return lobby;
+        const mp_lobby = new MPLobby(lobby);
+        return mp_lobby.visualize();
     }),
 
     globalRoundReset: protectedProcedure.mutation(async () => {
         // This is a global reset and only temporary
-        await prisma.$transaction([
-            prisma.player.deleteMany({}),
-            prisma.game.deleteMany({}),
-            prisma.lobby.deleteMany({}),
-        ]);
+        await prisma.lobby.deleteMany({});
     }),
     requestGameStart: protectedProcedure.mutation(async ({ ctx }) => {
         const userId = ctx.session.user.id;
@@ -158,20 +139,15 @@ export const lobbyRouter = createTRPCRouter({
                 },
                 include: {
                     lobby: {
-                        select: {
-                            id: true,
-                            channel: true,
-                            size: true,
-                            startAt: true,
-                            users: {
-                                select: {
-                                    id: true,
-                                    name: true,
-                                },
-                            },
+                        include: {
+                            users: true,
                             game: {
-                                select: {
-                                    id: true,
+                                include: {
+                                    players: {
+                                        include: {
+                                            user: true,
+                                        },
+                                    },
                                 },
                             },
                         },
@@ -179,7 +155,7 @@ export const lobbyRouter = createTRPCRouter({
                 },
             })) ?? panic("User not found");
 
-        const lobby = user.lobby;
+        const lobby = new MPLobby(user.lobby ?? panic("Not in a lobby"));
         if (!lobby) {
             throw new Error("Not in a lobby");
         }
@@ -193,68 +169,46 @@ export const lobbyRouter = createTRPCRouter({
         if (time_offset > 1000) {
             throw new Error("Lobby not ready to start (too early)");
         }
-        if (lobby.game?.id) {
+        if (lobby.game?.instance.id) {
             throw new Error("Lobby already has a game");
         }
-        const generated_game = generate_game(
-            lobby.users.map((u) => ({
-                id: u.id,
-                chip_amount: 100,
-                name: u.name,
-            })),
-            v4()
-        );
-        const [game, new_lobby] = await prisma.$transaction([
-            prisma.game.create({
-                data: {
-                    lobby: {
-                        connect: {
-                            id: lobby.id,
-                        },
-                    },
-                    players: {
-                        createMany: {
-                            data: generated_game.players.map((p) => ({
-                                bet: p.bet,
-                                card1: p.card1,
-                                card2: p.card2,
-                                chip_amount: p.chip_amount,
-                                id: p.id,
-                                folded: p.folded,
-                                channel: `player-${v4()}`,
-                            })),
-                        },
-                    },
-                    betIncreaseIndex: generated_game.betIncreaseIndex,
-                    centerCards: generated_game.centerCards,
-                    centerRevealAmount: generated_game.centerRevealAmount,
-                    currentPlayerIndex: generated_game.currentPlayerIndex,
-                    pot: generated_game.pot,
-                    id: v4(),
-                },
-                include: {
-                    players: {
-                        include: {
-                            user: true,
-                        },
+        const generated_game = MPGameState.generate(v4(), lobby.users);
+        const game_data = await prisma.game.create({
+            data: {
+                lobby: {
+                    connect: {
+                        id: lobby.id,
                     },
                 },
-            }),
-            prisma.lobby.update({
-                where: {
-                    id: lobby.id,
+                players: {
+                    createMany: {
+                        data: generated_game.instance.players.map((p) => ({
+                            bet: p.bet,
+                            card1: p.card1,
+                            card2: p.card2,
+                            chip_amount: p.chip_amount,
+                            id: p.id,
+                            folded: p.folded,
+                        })),
+                    },
                 },
-                data: {
-                    started: true,
+                betIncreaseIndex: generated_game.instance.betIncreaseIndex,
+                centerCards: generated_game.instance.centerCards,
+                centerRevealAmount: generated_game.instance.centerRevealAmount,
+                currentPlayerIndex: generated_game.instance.currentPlayerIndex,
+                pot: generated_game.instance.pot,
+                id: v4(),
+            },
+            include: {
+                players: {
+                    include: {
+                        user: true,
+                    },
                 },
-                include: {
-                    users: true,
-                },
-            }),
-        ]);
-
-        await distributeLobbyUpdate(new_lobby);
-        await distribute_new_state(game);
-        return game;
+            },
+        });
+        const game = MPGameState.from_prisma_data(game_data);
+        lobby.game = game;
+        await lobby.distribute();
     }),
 });

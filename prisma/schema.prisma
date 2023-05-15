@@ -24,6 +24,7 @@ model User {
     lobby         Lobby?    @relation(fields: [lobbyId], references: [id])
     lobbyId       String?
     timeout       DateTime?
+    channel       String?    @unique
 }
 
 model Account {
@@ -64,7 +65,6 @@ model Lobby {
     createdAt  DateTime  @default(now())
     updatedAt  DateTime  @updatedAt
     startAt    DateTime?
-    started    Boolean   @default(false)
     blindIndex Int
     game       Game?
     gameId     String?
@@ -85,7 +85,6 @@ model Player {
     folded      Boolean
     chip_amount Int
     bet         Int
-    channel     String  @unique
     game        Game    @relation(fields: [gameId], references: [id], onDelete: Cascade)
     gameId      String
     user        User    @relation(fields: [id], references: [id])

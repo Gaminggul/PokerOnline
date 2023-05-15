@@ -28,6 +28,26 @@ export const VisualGameStateSchema = z.object({
 
 export type VisualGameState = z.infer<typeof VisualGameStateSchema>;
 
+export const VisualLobbyStateSchema = z.object({
+    id: z.string(),
+    name: z.string(),
+    access: z.union([z.literal("public"), z.literal("private")]),
+    ownerId: z.string().optional(),
+    size: z.number(),
+    users: z.array(
+        z.object({
+            id: z.string(),
+            name: z.string(),
+        })
+    ),
+    startAt: z.date().optional(),
+    blindIndex: z.number(),
+    game_started: z.boolean(),
+    channel: z.string(),
+});
+
+export type VisualLobbyState = z.infer<typeof VisualLobbyStateSchema>;
+
 export const TableStateActionSchema = z.union([
     z.object({
         type: z.literal("fold"),

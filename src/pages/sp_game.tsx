@@ -1,10 +1,15 @@
 import { v4 } from "uuid";
 import { Layout } from "../components/layout";
-import SinglePlayer from "../components/single_player";
+import dynamic from "next/dynamic";
 import { useState } from "react";
 
+// Import SinglePlayer dynamically
+const SinglePlayer = dynamic(() => import("../components/single_player"), {
+    ssr: false,
+});
+
 function Game() {
-    const [gameId] = useState(v4);
+    const [gameId] = useState("SinglePlayer");
     return (
         <Layout show_banner={false}>
             {gameId && typeof gameId === "string" ? (

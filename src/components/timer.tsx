@@ -11,10 +11,12 @@ export function Timer({
     // A timer that counts down to a given end time.
     // The timer stays at 0 after the end time and calls on_end when it reaches 0.
     function get_remaining_time() {
-        return dayjs(end_time).subtract(dayjs().second(), "second").second();
+        const now = dayjs();
+        const end = dayjs(end_time);
+        return end.diff(now, "second", true);
     }
 
-    const [time, setTime] = useState(get_remaining_time());
+    const [time, setTime] = useState(Math.ceil(get_remaining_time()));
 
     useEffect(() => {
         const interval = setInterval(() => {
@@ -24,11 +26,11 @@ export function Timer({
                 void on_end?.();
                 clearInterval(interval);
             } else {
-                setTime(new_time);
+                setTime(Math.ceil(new_time));
             }
         }, 1000);
         return () => clearInterval(interval);
-    });
+    }, [end_time]);
 
     return <>{time}</>;
 }

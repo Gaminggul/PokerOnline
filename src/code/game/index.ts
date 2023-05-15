@@ -1,57 +1,9 @@
-import { create_deck } from "../create_deck";
-import { get_combination, type CardId } from "../cards";
+import { get_combination } from "../cards";
 import { cloneDeep, max } from "lodash-es";
 
 import type { GamePlayerData, GameData, PlayerAction } from "../game_data";
 import { panic } from "functional-utilities";
 import dayjs from "dayjs";
-
-export function generate_game(
-    user_data: { id: string; chip_amount: number }[],
-    table_id: string
-): GameData {
-    const deck = create_deck();
-    if (user_data.length > 10) {
-        throw new Error("Too many players");
-    }
-    const small_blind_value = 5;
-    const players = user_data.map((user, i) => {
-        return {
-            bet:
-                i === 0
-                    ? small_blind_value
-                    : i === 1
-                    ? small_blind_value * 2
-                    : 0,
-            //hand: ["spades_10", "hearts_9"],
-            card1: deck.pop() ?? panic("No more cards"),
-            card2: deck.pop() ?? panic("No more cards"),
-            folded: false,
-            id: user.id,
-            chip_amount: user.chip_amount,
-        } satisfies GamePlayerData;
-    });
-
-    const centerCards: CardId[] = deck.splice(0, 5);
-    // [
-    //     "diamonds_queen",
-    //     "clubs_king",
-    //     "spades_jack",
-    //     "spades_5",
-    //     "clubs_queen",
-    // ];
-
-    return {
-        players: players,
-        centerCards,
-        centerRevealAmount: 0,
-        currentPlayerIndex: 2 % players.length,
-        betIncreaseIndex: 0,
-        id: table_id,
-        pot: 0,
-        restartAt: undefined,
-    };
-}
 
 function get_winners(state: GameData): GamePlayerData[] | undefined {
     // winners are the players with the same highest score
@@ -181,10 +133,6 @@ function compute_next_center(originalState: Readonly<GameData>): GameData {
     }
     return state;
 }
-
-// setTimeout(() => {
-//     setTableState(() => generate_game(playerData, props.tableId));
-// }, 5000);
 
 function compute_ended(originalState: Readonly<GameData>): GameData {
     const state = cloneDeep(originalState) as GameData;
