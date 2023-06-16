@@ -76,6 +76,7 @@ export const gameRouter = createTRPCRouter({
         if (!lobby.game.restartAt) {
             throw new Error("Restart not scheduled");
         }
+        console.log(lobby.id, lobby.game.id)
         const generated_game = MPGameState.generate(
             lobby.game.id,
             lobby.game.players.map((p) => new MPUser(p.user))

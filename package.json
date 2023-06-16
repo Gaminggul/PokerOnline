@@ -5,12 +5,12 @@
     "scripts": {
         "build": "next build",
         "dev": "next dev",
-        "postinstall": "prisma generate --data-proxy",
         "lint": "next lint",
         "start": "next start",
-        "updateprisma": "prisma generate --data-proxy && dotenv -e .env.node -- prisma db push --skip-generate",
         "format": "prettier --write . --ignore-path .gitignore",
+        "postinstall": "prisma generate --data-proxy",
         "studio": "dotenv -e .env.node -- prisma studio",
+        "updateprisma": "prisma generate --data-proxy && dotenv -e .env.node -- prisma db push --skip-generate",
         "socket": "dotenv -- cargo run --release --bin socket"
     },
     "dependencies": {

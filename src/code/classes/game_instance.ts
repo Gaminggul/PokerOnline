@@ -45,12 +45,12 @@ export class GameInstance<P extends Player> {
     }
 
     static generate<U, P extends Player>(
+        game_id: string,
         users: U[],
         init_player: (u: U, d: NewPlayerData, game_id: string) => P
     ): GameInstance<P> {
         const deck = create_deck();
         const small_blind_value = 5;
-        const game_id = v4();
         const players = users.map((user, i) =>
             init_player(
                 user,
@@ -113,6 +113,12 @@ export class GameInstance<P extends Player> {
             (p) =>
                 !p.is_folded() && p.get_chip_amount() - p.get_current_bet() > 0
         );
+    }
+
+    remove_player(pid: string): GameInstance<P> {
+        const copy = this.clone();
+        copy.players.splice(copy.players.findIndex((p) => p.get_pid() === pid));
+        return copy;
     }
 
     min_bet(): number {

@@ -43,7 +43,7 @@ function Lobby() {
     const [lobby, setLobby] = useState<VisualLobbyState | null>(null);
     const joiningRef = useRef(false);
     const joinLobby = api.lobby.joinLobby.useMutation();
-    const lobbyQuery = api.lobby.getLobby.useQuery();
+    const lobbyQuery = api.lobby.getLobby.useQuery(undefined, { cacheTime: 0 });
     const pongMutation = api.lobby.pong.useMutation();
 
     const channel_name = useConditionalMemo(

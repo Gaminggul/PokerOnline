@@ -37,7 +37,7 @@ export class MPPlayer implements Player, PrismaPlayer {
             prismaPlayer.gameId,
 
             prismaPlayer.user.name,
-            prismaPlayer.user.channel ?? v4()
+            prismaPlayer.user.channel ?? `player-${v4()}`
         );
     }
 
@@ -127,6 +127,7 @@ export class MPGameState implements GameState<MPPlayer> {
 
     static generate(game_id: string, users: MPUser[]): MPGameState {
         const new_instance = GameInstance.generate(
+            game_id,
             users,
             (user, data) =>
                 new MPPlayer(
@@ -139,7 +140,7 @@ export class MPGameState implements GameState<MPPlayer> {
                     game_id,
 
                     user.name,
-                    user.channel ?? v4()
+                    user.channel ?? `player-${v4()}`
                 )
         );
         return new MPGameState(new_instance);
@@ -147,6 +148,7 @@ export class MPGameState implements GameState<MPPlayer> {
 
     async distribute(): Promise<void> {
         const pusher = create_pusher_server();
+        console.log(this.instance.id);
         await Promise.all([
             pusher.triggerBatch(
                 this.instance.players.map((p) => ({
@@ -165,7 +167,7 @@ export class MPGameState implements GameState<MPPlayer> {
                     currentPlayerIndex: this.instance.currentPlayerIndex,
                     betIncreaseIndex: this.instance.betIncreaseIndex,
                     pot: this.instance.pot,
-                    restartAt: this.instance.restartAt ?? undefined,
+                    restartAt: this.instance.restartAt ?? null,
                     players: {
                         updateMany: this.instance.players.map((p) => ({
                             where: {

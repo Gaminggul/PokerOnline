@@ -3,6 +3,7 @@ import type { GameState, Player } from "../interfaces/player";
 import { CardIdSchema } from "../card_tuple";
 import { type CardId } from "../cards";
 import { PlayerAction } from "../game_data";
+import { v4 } from "uuid";
 
 export class SPPlayer implements Player {
     id: string;
@@ -89,6 +90,7 @@ export class SPGameState implements GameState<SPPlayer> {
         users: { id: string; name: string; chips: number }[]
     ): SPGameState {
         const new_instance = GameInstance.generate(
+            game_id,
             users,
             (user, data) =>
                 new SPPlayer(
@@ -108,6 +110,7 @@ export class SPGameState implements GameState<SPPlayer> {
     restart(): SPGameState {
         return new SPGameState(
             GameInstance.generate(
+                v4(),
                 this.instance.players,
                 (u, d, game_id) =>
                     new SPPlayer(

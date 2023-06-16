@@ -10,6 +10,7 @@ import type {
 import { MPUser } from "./mp_user";
 import { create_pusher_server } from "../../server/pusher";
 import type { VisualLobbyState } from "../game_data";
+import { panic, pipe } from "functional-utilities";
 
 export class MPLobby {
     game?: MPGameState;
@@ -54,7 +55,7 @@ export class MPLobby {
         this.users = lobby.users.map((user) => new MPUser(user));
     }
 
-    start_game() {
+    start_or_restart() {
         const id = this.game?.instance.id ?? v4();
         this.game = MPGameState.generate(id, this.users);
     }
@@ -91,5 +92,15 @@ export class MPLobby {
             startAt: this.startAt ?? undefined,
             game_started: !!this.game,
         };
+    }
+
+    remove_user(user_id: string) {
+        this.game?.instance.remove_player(user_id);
+        this.users.splice(
+            pipe(
+                this.users.findIndex((u) => u.id === user_id),
+                (v) => (v === -1 ? undefined : v)
+            ) ?? panic("User does not exist")
+        );
     }
 }
