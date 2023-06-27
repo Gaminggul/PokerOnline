@@ -1,9 +1,11 @@
+import type { GameVariants } from "./game_instance";
 import { GameInstance } from "./game_instance";
 import type { GameState, Player } from "../interfaces/player";
 import { CardIdSchema } from "../card_tuple";
 import { type CardId } from "../cards";
-import { PlayerAction } from "../game_data";
+import type { PlayerAction } from "../game_data";
 import { v4 } from "uuid";
+import type { NonEmptyArray } from "functional-utilities";
 
 export class SPPlayer implements Player {
     id: string;
@@ -13,7 +15,7 @@ export class SPPlayer implements Player {
     chip_amount: number;
     bet: number;
     gameId: string;
-
+    had_turn: boolean;
     name: string;
 
     constructor(
@@ -24,6 +26,7 @@ export class SPPlayer implements Player {
         chip_amount: number,
         bet: number,
         gameId: string,
+        had_turn: boolean,
         name: string
     ) {
         this.id = id;
@@ -33,6 +36,7 @@ export class SPPlayer implements Player {
         this.chip_amount = chip_amount;
         this.bet = bet;
         this.gameId = gameId;
+        this.had_turn = had_turn;
         this.name = name;
     }
 
@@ -71,6 +75,14 @@ export class SPPlayer implements Player {
     get_cards(): [CardId, CardId] {
         return [CardIdSchema.parse(this.card1), CardIdSchema.parse(this.card2)];
     }
+
+    get_had_turn(): boolean {
+        return this.had_turn;
+    }
+
+    set_had_turn(had_turn: boolean): void {
+        this.had_turn = had_turn;
+    }
 }
 
 export class SPGameState implements GameState<SPPlayer> {
@@ -87,11 +99,13 @@ export class SPGameState implements GameState<SPPlayer> {
 
     static generate(
         game_id: string,
-        users: { id: string; name: string; chips: number }[]
+        users: NonEmptyArray<{ id: string; name: string; chips: number }>,
+        variant: GameVariants
     ): SPGameState {
         const new_instance = GameInstance.generate(
             game_id,
             users,
+            variant,
             (user, data) =>
                 new SPPlayer(
                     user.id,
@@ -101,6 +115,7 @@ export class SPGameState implements GameState<SPPlayer> {
                     100,
                     data.bet,
                     game_id,
+                    data.had_turn,
                     user.name
                 )
         );
@@ -112,15 +127,17 @@ export class SPGameState implements GameState<SPPlayer> {
             GameInstance.generate(
                 v4(),
                 this.instance.players,
-                (u, d, game_id) =>
+                this.instance.variant,
+                (u, data, game_id) =>
                     new SPPlayer(
                         u.id,
-                        d.card1,
-                        d.card2,
-                        d.folded,
+                        data.card1,
+                        data.card2,
+                        data.folded,
                         u.chip_amount,
-                        d.bet,
+                        data.bet,
                         game_id,
+                        data.had_turn,
                         u.name
                     )
             )

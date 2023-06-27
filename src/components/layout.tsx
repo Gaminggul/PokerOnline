@@ -3,6 +3,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { type PropsWithChildren } from "react";
 import { noop } from "../utils/common";
+import { useChannel } from "../code/pusher";
+import { api } from "../utils/api";
 
 export function Layout(props: PropsWithChildren<{ show_banner: boolean }>) {
     return (
@@ -60,9 +62,13 @@ function Sidebar() {
 function Profile() {
     const { data: session } = useSession({ required: true });
     return (
-        <div className="flex items-center">
-            <p>{session?.user.name}</p>
-            <Image src="/favicon.ico" alt="Profilepic" width={64} height={64} />
+        <div className="flex items-center justify-between">
+            <p className="text-base">{session?.user.name}</p>
+            <img
+                src={session?.user.image ?? "/favicon.ico"}
+                alt="Profilepic"
+                className="h-12 w-12 rounded-sm"
+            />
         </div>
     );
 }

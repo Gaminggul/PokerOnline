@@ -11,6 +11,8 @@ export interface Player {
     update_current_bet(amount: number): void;
     fold(): void;
     get_cards(): [CardId, CardId];
+    set_had_turn(had_turn: boolean): void;
+    get_had_turn(): boolean;
 }
 
 export interface GameState<T extends Player> {

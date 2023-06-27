@@ -1,4 +1,5 @@
-import { GameInstance } from "./game_instance";
+import type { GameVariants } from "./game_instance";
+import { GameInstance, GameVariantsSchema } from "./game_instance";
 import type { GameState, Player } from "../interfaces/player";
 import type {
     Player as PrismaPlayer,
@@ -11,6 +12,7 @@ import { create_pusher_server } from "../../server/pusher";
 import { prisma } from "../../server/db";
 import type { MPUser } from "./mp_user";
 import { v4 } from "uuid";
+import { type NonEmptyArray, isNonEmptyArray } from "functional-utilities";
 
 export class MPPlayer implements Player, PrismaPlayer {
     id: string;
@@ -20,7 +22,7 @@ export class MPPlayer implements Player, PrismaPlayer {
     chip_amount: number;
     bet: number;
     gameId: string;
-
+    had_turn: boolean;
     name: string;
     channel: string;
 
@@ -35,7 +37,7 @@ export class MPPlayer implements Player, PrismaPlayer {
             prismaPlayer.chip_amount,
             prismaPlayer.bet,
             prismaPlayer.gameId,
-
+            prismaPlayer.had_turn,
             prismaPlayer.user.name,
             prismaPlayer.user.channel ?? `player-${v4()}`
         );
@@ -49,6 +51,7 @@ export class MPPlayer implements Player, PrismaPlayer {
         chip_amount: number,
         bet: number,
         gameId: string,
+        had_turn: boolean,
         name: string,
         channel: string
     ) {
@@ -59,6 +62,7 @@ export class MPPlayer implements Player, PrismaPlayer {
         this.chip_amount = chip_amount;
         this.bet = bet;
         this.gameId = gameId;
+        this.had_turn = had_turn;
         this.name = name;
         this.channel = channel;
     }
@@ -98,6 +102,14 @@ export class MPPlayer implements Player, PrismaPlayer {
     get_cards(): [CardId, CardId] {
         return [CardIdSchema.parse(this.card1), CardIdSchema.parse(this.card2)];
     }
+
+    get_had_turn(): boolean {
+        return this.had_turn;
+    }
+
+    set_had_turn(had_turn: boolean): void {
+        this.had_turn = had_turn;
+    }
 }
 
 export class MPGameState implements GameState<MPPlayer> {
@@ -108,16 +120,20 @@ export class MPGameState implements GameState<MPPlayer> {
             players: (PrismaPlayer & { user: PrismaUser })[];
         }
     ): MPGameState {
-        const instance = new GameInstance<MPPlayer>(
-            prisma_game.id,
-            CardIdsSchema.parse(prisma_game.centerCards),
-            prisma_game.centerRevealAmount,
-            prisma_game.players.map((p) => MPPlayer.from_prisma_data(p)),
-            prisma_game.currentPlayerIndex,
-            prisma_game.betIncreaseIndex,
-            prisma_game.pot,
-            prisma_game.restartAt ?? undefined
-        );
+        if (!isNonEmptyArray(prisma_game.players)) {
+            throw new Error("No players");
+        }
+        const instance = new GameInstance<MPPlayer>({
+            id: prisma_game.id,
+            centerCards: CardIdsSchema.parse(prisma_game.centerCards),
+            centerRevealAmount: prisma_game.centerRevealAmount,
+            players: prisma_game.players.map((p) =>
+                MPPlayer.from_prisma_data(p)
+            ),
+            pot: prisma_game.pot,
+            restartAt: prisma_game.restartAt ?? undefined,
+            variant: GameVariantsSchema.parse(prisma_game.variant),
+        });
         return new MPGameState(instance);
     }
 
@@ -125,10 +141,15 @@ export class MPGameState implements GameState<MPPlayer> {
         this.instance = instance;
     }
 
-    static generate(game_id: string, users: MPUser[]): MPGameState {
+    static generate(
+        game_id: string,
+        users: NonEmptyArray<MPUser>,
+        variant: GameVariants
+    ): MPGameState {
         const new_instance = GameInstance.generate(
             game_id,
             users,
+            variant,
             (user, data) =>
                 new MPPlayer(
                     user.id,
@@ -138,7 +159,7 @@ export class MPGameState implements GameState<MPPlayer> {
                     user.chips,
                     data.bet,
                     game_id,
-
+                    data.had_turn,
                     user.name,
                     user.channel ?? `player-${v4()}`
                 )
@@ -164,8 +185,6 @@ export class MPGameState implements GameState<MPPlayer> {
                 data: {
                     centerCards: this.instance.centerCards,
                     centerRevealAmount: this.instance.centerRevealAmount,
-                    currentPlayerIndex: this.instance.currentPlayerIndex,
-                    betIncreaseIndex: this.instance.betIncreaseIndex,
                     pot: this.instance.pot,
                     restartAt: this.instance.restartAt ?? null,
                     players: {
@@ -179,6 +198,7 @@ export class MPGameState implements GameState<MPPlayer> {
                                 folded: p.folded,
                                 chip_amount: p.chip_amount,
                                 bet: p.bet,
+                                had_turn: p.had_turn,
                             },
                         })),
                     },

@@ -2,12 +2,20 @@ import { z } from "zod";
 import { createTRPCRouter, protectedProcedure } from "../trpc";
 import { prisma } from "../../db";
 import { v4 } from "uuid";
-import { panic } from "functional-utilities";
+import { panic, type NonEmptyArray } from "functional-utilities";
 import { default as dayjs } from "dayjs";
 import { AccessSchema } from "../../../code/access";
 import { player_start_amount } from "../../../code/constants";
 import { MPGameState } from "../../../code/classes/mp_game_state";
 import { MPLobby } from "../../../code/classes/mp_lobby";
+
+function lobby_ready<T>(
+    lobby: { users: T[]; size: number },
+    user_amount_override?: number
+): lobby is { users: NonEmptyArray<T>; size: number } {
+    const user_amount = user_amount_override ?? lobby.users.length;
+    return user_amount > player_start_amount - 1 || user_amount == lobby.size;
+}
 
 export const lobbyRouter = createTRPCRouter({
     pong: protectedProcedure.mutation(async ({ ctx }) => {
@@ -46,7 +54,7 @@ export const lobbyRouter = createTRPCRouter({
 
                 const user_amount = lobby
                     ? lobby.users.filter((u) => u.id !== user.id).length + 1
-                    : 1;
+                    : 1; // +1 because the user is not in the lobby yet
                 if (!lobby || lobby.users.length >= lobby.size) {
                     return await tx.lobby.create({
                         data: {
@@ -75,11 +83,9 @@ export const lobbyRouter = createTRPCRouter({
                                     id: user.id,
                                 },
                             },
-                            startAt:
-                                user_amount > player_start_amount - 1 ||
-                                user_amount == lobby.size
-                                    ? dayjs().add(20, "second").toDate()
-                                    : undefined,
+                            startAt: lobby_ready(lobby, user_amount)
+                                ? dayjs().add(20, "second").toDate()
+                                : undefined,
                         },
                         include: {
                             users: true,
@@ -172,7 +178,14 @@ export const lobbyRouter = createTRPCRouter({
         if (lobby.game?.instance.id) {
             throw new Error("Lobby already has a game");
         }
-        const generated_game = MPGameState.generate(v4(), lobby.users);
+        if (!lobby_ready(lobby)) {
+            throw new Error("Lobby not ready to start (not enough players)");
+        }
+        const generated_game = MPGameState.generate(
+            v4(),
+            lobby.users,
+            "texas_holdem"
+        );
         const game_data = await prisma.game.create({
             data: {
                 lobby: {
@@ -189,14 +202,14 @@ export const lobbyRouter = createTRPCRouter({
                             chip_amount: p.chip_amount,
                             id: p.id,
                             folded: p.folded,
+                            had_turn: p.had_turn,
                         })),
                     },
                 },
-                betIncreaseIndex: generated_game.instance.betIncreaseIndex,
                 centerCards: generated_game.instance.centerCards,
                 centerRevealAmount: generated_game.instance.centerRevealAmount,
-                currentPlayerIndex: generated_game.instance.currentPlayerIndex,
                 pot: generated_game.instance.pot,
+                variant: generated_game.instance.variant,
                 id: v4(),
             },
             include: {

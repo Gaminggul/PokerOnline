@@ -24,7 +24,7 @@ model User {
     lobby         Lobby?    @relation(fields: [lobbyId], references: [id])
     lobbyId       String?
     timeout       DateTime?
-    channel       String?    @unique
+    channel       String?   @unique
 }
 
 model Account {
@@ -88,6 +88,7 @@ model Player {
     game        Game    @relation(fields: [gameId], references: [id], onDelete: Cascade)
     gameId      String
     user        User    @relation(fields: [id], references: [id])
+    had_turn    Boolean
 }
 
 model Game {
@@ -95,12 +96,11 @@ model Game {
     centerCards        String[]
     centerRevealAmount Int
     players            Player[]
-    currentPlayerIndex Int
-    betIncreaseIndex   Int
     pot                Int
     lobby              Lobby     @relation(fields: [lobbyId], references: [id], onDelete: Cascade)
     lobbyId            String    @unique
     restartAt          DateTime?
+    variant            String
 }
 
 enum Role {

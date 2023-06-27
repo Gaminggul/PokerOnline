@@ -2,7 +2,7 @@ import { TableStateActionSchema } from "../../../code/game_data";
 import { prisma } from "../../db";
 
 import { createTRPCRouter, protectedProcedure } from "../trpc";
-import { panic } from "functional-utilities";
+import { isNonEmptyArray, panic } from "functional-utilities";
 
 import { MPGameState } from "../../../code/classes/mp_game_state";
 import { MPUser } from "../../../code/classes/mp_user";
@@ -45,10 +45,10 @@ export const gameRouter = createTRPCRouter({
             },
         });
         if (lobby === null) {
-            return "not_in_lobby"
+            return "not_in_lobby";
         }
         if (lobby.game === null) {
-            return "lobby_not_started"
+            return "lobby_not_started";
         }
         const game = MPGameState.from_prisma_data(lobby.game);
         return game.instance.visualize(user.id);
@@ -76,10 +76,14 @@ export const gameRouter = createTRPCRouter({
         if (!lobby.game.restartAt) {
             throw new Error("Restart not scheduled");
         }
-        console.log(lobby.id, lobby.game.id)
+        if (!isNonEmptyArray(lobby.game.players)) {
+            throw new Error("No players in game");
+        }
+        console.log(lobby.id, lobby.game.id);
         const generated_game = MPGameState.generate(
             lobby.game.id,
-            lobby.game.players.map((p) => new MPUser(p.user))
+            lobby.game.players.map((p) => new MPUser(p.user)),
+            "texas_holdem"
         );
         await generated_game.distribute();
     }),

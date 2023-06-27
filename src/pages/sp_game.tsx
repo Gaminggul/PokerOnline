@@ -1,4 +1,3 @@
-import { v4 } from "uuid";
 import { Layout } from "../components/layout";
 import dynamic from "next/dynamic";
 import { useState } from "react";

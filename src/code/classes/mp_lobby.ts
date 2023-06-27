@@ -10,12 +10,11 @@ import type {
 import { MPUser } from "./mp_user";
 import { create_pusher_server } from "../../server/pusher";
 import type { VisualLobbyState } from "../game_data";
-import { panic, pipe } from "functional-utilities";
+import { isNonEmptyArray, panic, pipe } from "functional-utilities";
 
 export class MPLobby {
     game?: MPGameState;
     users: MPUser[] = [];
-
     id: string;
     name?: string;
     access: Access;
@@ -56,8 +55,11 @@ export class MPLobby {
     }
 
     start_or_restart() {
+        if (!isNonEmptyArray(this.users)) {
+            panic("Cannot start a game with no users");
+        }
         const id = this.game?.instance.id ?? v4();
-        this.game = MPGameState.generate(id, this.users);
+        this.game = MPGameState.generate(id, this.users, "texas_holdem");
     }
 
     async distribute() {

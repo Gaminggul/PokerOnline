@@ -2,7 +2,7 @@ import { useRouter } from "next/router";
 import { useEffect, useRef, useState } from "react";
 import { api } from "../../../../utils/api";
 import { Layout } from "../../../../components/layout";
-import { subscribe, unsubscribe } from "../../../../code/pusher";
+import { subscribe, unsubscribe, useChannel } from "../../../../code/pusher";
 import { Timer } from "../../../../components/timer";
 import {
     type VisualGameState,
@@ -55,15 +55,22 @@ function Lobby() {
 
     const { data: session } = useSession({ required: true });
 
+    const channel = useChannel(channel_name);
     useEffect(() => {
-        if (channel_name) {
-            const channel = subscribe(channel_name);
+        if (channel) {
+            channel.unbind("update");
             channel.bind("update", (newData: unknown) => {
                 setLobby(
                     createJsonSchema(VisualLobbyStateSchema).parse(newData)
                 );
                 console.log("Lobby updated", newData);
             });
+        }
+    }, [channel]);
+
+    useEffect(() => {
+        if (channel) {
+            channel.unbind("ping");
             channel.bind("ping", (id: string) => {
                 if (id !== session?.user?.id) {
                     return;
@@ -71,12 +78,8 @@ function Lobby() {
                 console.log("Pong");
                 pongMutation.mutate();
             });
-            return () => {
-                channel.unbind_all();
-                unsubscribe(channel_name);
-            };
         }
-    }, [channel_name, pongMutation]);
+    }, [channel, session?.user?.id, pongMutation]);
 
     useEffect(() => {
         let schedule_update = false;
@@ -223,7 +226,7 @@ function MultiPlayer() {
         } else {
             setVisualGameState(data);
         }
-    }, [visualGameStateQuery.data]);
+    }, [visualGameStateQuery.data, router]);
 
     return (
         <div className="h-full">

@@ -28,7 +28,8 @@ type JsonTypeObject<T> = {
     [K in keyof T]: ConvertToJson<T[K]>;
 };
 
-import { ZodObject, type ZodType } from "zod";
+import type { ZodObject} from "zod";
+import { type ZodType } from "zod";
 import { jsonifySchema } from "./jsonify";
 
 type ZodTransformer<T extends ZodType<any, any, any>> = T extends ZodType<

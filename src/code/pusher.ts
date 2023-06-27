@@ -39,9 +39,9 @@ export function unsubscribe(channelName: string): void {
     }, 0); // This is delayed so unsubscribe only destroys if no new subscriptions are made
 }
 
-export function useChannel(
-    channelName: string | undefined
-): Channel | undefined {
+export function useChannel<T extends string | undefined>(
+    channelName: T
+): T extends string ? Channel : undefined {
     const [channel, setChannel] = useState<Channel | null>(null);
 
     useEffect(() => {
@@ -54,5 +54,5 @@ export function useChannel(
         }
     }, [channelName]);
 
-    return channel ?? undefined;
+    return (channel ?? undefined) as T extends string ? Channel : undefined;
 }

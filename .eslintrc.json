@@ -4,7 +4,10 @@
             "extends": [
                 "plugin:@typescript-eslint/recommended-requiring-type-checking"
             ],
-            "files": ["*.ts", "*.tsx"],
+            "files": [
+                "*.ts",
+                "*.tsx"
+            ],
             "parserOptions": {
                 "project": "tsconfig.json"
             }
@@ -14,12 +17,16 @@
     "parserOptions": {
         "project": "./tsconfig.json"
     },
-    "plugins": ["@typescript-eslint"],
+    "plugins": [
+        "@typescript-eslint"
+    ],
     "extends": [
         "next/core-web-vitals",
         "plugin:@typescript-eslint/recommended"
     ],
     "rules": {
-        "@typescript-eslint/consistent-type-imports": "warn"
+        "@typescript-eslint/consistent-type-imports": "warn",
+        "@typescript-eslint/no-explicit-any": "off",
+        "@next/next/no-img-element": "off"
     }
 }

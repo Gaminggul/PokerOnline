@@ -3,6 +3,12 @@ import Table from "./table";
 import { useState } from "react";
 import { v4 } from "uuid";
 import { SPGameState } from "../code/classes/sp_game_state";
+import {
+    NonEmptyArray,
+    at,
+    isNonEmptyArray,
+    panic,
+} from "functional-utilities";
 
 const start_user_data = [
     {
@@ -15,29 +21,26 @@ const start_user_data = [
         id: v4(),
         name: "Player 2",
     },
-];
+] satisfies NonEmptyArray<any>;
 
 function SinglePlayer({ id }: { id: string }) {
     const [spGameState, setSpGameState] = useState<SPGameState>(
-        SPGameState.generate(id, start_user_data)
+        SPGameState.generate(id, start_user_data, "texas_holdem")
     );
 
+    const current =
+        spGameState.instance.awaited_players()[0] ??
+        at(spGameState.instance.players, 0);
+
     function action_handler(action: PlayerAction) {
-        setSpGameState(() =>
-            spGameState.action(
-                action,
-                spGameState.instance.get_current_player().get_pid()
-            )
-        );
+        setSpGameState(() => spGameState.action(action, current.get_pid()));
     }
 
     return (
         <>
             <Table
                 submit_action={action_handler}
-                state={spGameState.instance.visualize(
-                    spGameState.instance.get_current_player().get_pid()
-                )}
+                state={spGameState.instance.visualize(current.get_pid())}
                 restart_action={() => {
                     setSpGameState(spGameState.restart());
                 }}

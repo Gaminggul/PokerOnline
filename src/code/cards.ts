@@ -158,6 +158,19 @@ function rank_evaluate(rank_amounts: number[]): CombinationEvaluator {
     };
 }
 
+function calculateSuitSequences(cards: CardId[]): [SuitId, number[]][] {
+    const suits = split_into_suits(cards);
+    return typed_entries(suits).map(([suit, cards]) => {
+        const sorted_cards = sort_cards_by_rank(cards);
+        let ranks = sorted_cards.map(get_card_score);
+        if (ranks.includes(14)) {
+            ranks = [1, ...ranks];
+        }
+        const longest = longest_consecutive_sequence(ranks);
+        return [suit, longest] as [SuitId, number[]];
+    });
+}
+
 export const combinations = [
     {
         id: "high_card",
@@ -193,7 +206,11 @@ export const combinations = [
         id: "straight",
         evaluate: (cards: CardId[]) => {
             const sorted_cards = sort_cards_by_rank(cards);
-            const ranks = uniq(sorted_cards.map(get_card_score));
+            let ranks = uniq(sorted_cards.map(get_card_score));
+            if (ranks.includes(14)) {
+                // consider Ace as 1 and check for straight
+                ranks = [1, ...ranks];
+            }
             const longest = longest_consecutive_sequence(ranks);
             if (longest.length < 5) {
                 return {
@@ -245,13 +262,7 @@ export const combinations = [
     {
         id: "straight_flush",
         evaluate: (cards: CardId[]) => {
-            const suits = split_into_suits(cards);
-            const suit_sequences = typed_entries(suits).map(([suit, cards]) => {
-                const sorted_cards = sort_cards_by_rank(cards);
-                const ranks = sorted_cards.map(get_card_score);
-                const longest = longest_consecutive_sequence(ranks);
-                return [suit, longest] as [SuitId, number[]];
-            });
+            const suit_sequences = calculateSuitSequences(cards);
             const valid_suit_sequences = suit_sequences.filter(
                 ([, sequence]) => sequence.length >= 5
             );
@@ -268,6 +279,7 @@ export const combinations = [
                             ([, sequence]) => max(sequence) ?? panic("No cards")
                         )
                     ) ?? panic("No cards"),
+                suit: (valid_suit_sequences[0] ?? panic())[0], // add the suit to the returned value
             };
         },
         base_score: 9,
@@ -275,26 +287,11 @@ export const combinations = [
     {
         id: "royal_flush",
         evaluate: (cards: CardId[]) => {
-            const suits = split_into_suits(cards);
-            const suit_sequences = typed_entries(suits).flatMap(
-                ([suit, cards]) => {
-                    const sorted_cards = sort_cards_by_rank(cards);
-                    if (
-                        parse_card(
-                            sorted_cards.at(-1) ?? panic("No cards")
-                        )?.[1] !== "ace"
-                    ) {
-                        return [];
-                    }
-                    const ranks = uniq(sorted_cards.map(get_card_score));
-                    const longest = longest_consecutive_sequence(ranks);
-                    return [[suit, longest] as [SuitId, number[]]];
-                }
+            const suit_sequences = calculateSuitSequences(cards);
+            const royal_sequences = suit_sequences.filter(
+                ([, sequence]) => sequence.includes(14) && sequence.length >= 5
             );
-            const valid_suit_sequences = suit_sequences.filter(
-                ([, sequence]) => sequence.length >= 5
-            );
-            if (valid_suit_sequences.length === 0) {
+            if (royal_sequences.length === 0) {
                 return {
                     type: "none",
                 };
@@ -303,10 +300,11 @@ export const combinations = [
                 type: "some",
                 score:
                     max(
-                        valid_suit_sequences.map(
+                        royal_sequences.map(
                             ([, sequence]) => max(sequence) ?? panic("No cards")
                         )
                     ) ?? panic("No cards"),
+                suit: (royal_sequences[0] ?? panic())[0], // add the suit to the returned value
             };
         },
         base_score: 10,
@@ -333,11 +331,10 @@ export function get_combination(
             type: "none",
         };
     }
+    const parsed = CardIdsSchema.parse(cards);
     const combinations_with_cards = combinations
         .map((combination) => {
-            const combination_cards = combination.evaluate(
-                CardIdsSchema.parse(cards)
-            );
+            const combination_cards = combination.evaluate(parsed);
             if (combination_cards.type === "none") {
                 return undefined;
             }

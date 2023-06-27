@@ -1,52 +1,62 @@
-import { panic, pipe } from "functional-utilities";
+import {
+    type NonEmptyArray,
+    isNonEmptyArray,
+    panic,
+    pipe,
+} from "functional-utilities";
 import { get_combination, type CardId } from "../cards";
 import type { PlayerAction, VisualGameState } from "../game_data";
-import { cloneDeep, max } from "lodash-es";
+import { max } from "lodash-es";
 import type { Player } from "../interfaces/player";
 import { create_deck } from "../create_deck";
-import { v4 } from "uuid";
 import dayjs from "dayjs";
+import { z } from "zod";
 
 export type NewPlayerData = {
     bet: number;
     card1: CardId;
     card2: CardId;
     folded: boolean;
+    had_turn: boolean;
 };
+
+type GetProperties<T> = Pick<
+    T,
+    {
+        [K in keyof T]: T[K] extends (...args: any[]) => any ? never : K;
+    }[keyof T]
+>;
+
+export const GameVariantsSchema = z.union([
+    z.literal("texas_holdem"),
+    z.literal("async_texas_holdem"),
+]);
+
+export type GameVariants = z.infer<typeof GameVariantsSchema>;
 
 export class GameInstance<P extends Player> {
     id: string;
     centerCards: CardId[];
     centerRevealAmount: number;
-    players: P[];
-    currentPlayerIndex: number;
-    betIncreaseIndex: number;
+    players: NonEmptyArray<P>;
     pot: number;
     restartAt: Date | undefined;
+    variant: GameVariants;
 
-    constructor(
-        id: string,
-        centerCards: CardId[],
-        centerRevealAmount: number,
-        players: P[],
-        currentPlayerIndex: number,
-        betIncreaseIndex: number,
-        pot: number,
-        restartAt?: Date
-    ) {
-        this.id = id;
-        this.centerCards = centerCards;
-        this.centerRevealAmount = centerRevealAmount;
-        this.players = players;
-        this.currentPlayerIndex = currentPlayerIndex;
-        this.betIncreaseIndex = betIncreaseIndex;
-        this.pot = pot;
-        this.restartAt = restartAt;
+    constructor(props: GetProperties<GameInstance<P>>) {
+        this.id = props.id;
+        this.centerCards = props.centerCards;
+        this.centerRevealAmount = props.centerRevealAmount;
+        this.players = props.players;
+        this.variant = props.variant;
+        this.pot = props.pot;
+        this.restartAt = props.restartAt;
     }
 
     static generate<U, P extends Player>(
         game_id: string,
-        users: U[],
+        users: NonEmptyArray<U>,
+        variant: GameVariants,
         init_player: (u: U, d: NewPlayerData, game_id: string) => P
     ): GameInstance<P> {
         const deck = create_deck();
@@ -65,6 +75,7 @@ export class GameInstance<P extends Player> {
                     card1: deck.pop() ?? panic("No more cards"),
                     card2: deck.pop() ?? panic("No more cards"),
                     folded: false,
+                    had_turn: false,
                 } satisfies NewPlayerData,
                 game_id
             )
@@ -79,141 +90,127 @@ export class GameInstance<P extends Player> {
         //     "clubs_queen",
         // ];
 
-        return new GameInstance(
-            game_id,
+        return new GameInstance({
+            id: game_id,
             centerCards,
-            0,
-            players,
-            2 % players.length,
-            0,
-            0
-        );
-    }
-
-    get_current_player(): P {
-        return (
-            this.players[this.currentPlayerIndex] ?? panic("No current player")
-        );
+            centerRevealAmount: 0,
+            players: players,
+            variant,
+            pot: 0,
+            restartAt: undefined,
+        });
     }
 
     get_player(pid: string): P | undefined {
         return this.players.find((p) => p.get_pid() === pid);
     }
 
-    is_current_player(pid: string): boolean {
-        return this.get_current_player().get_pid() === pid;
+    get_player_index(pid: string): number | undefined {
+        const index = this.players.findIndex((p) => p.get_pid() === pid);
+        return index === -1 ? undefined : index;
     }
 
     clone(): GameInstance<P> {
-        return cloneDeep(this);
+        return new GameInstance(this);
+    }
+
+    is_active(pid: string): boolean {
+        const p = this.get_player(pid) ?? panic(`Player ${pid} not found`);
+        return !p.is_folded() && p.get_chip_amount() - p.get_current_bet() > 0;
     }
 
     active_players(): P[] {
-        return this.players.filter(
-            (p) =>
-                !p.is_folded() && p.get_chip_amount() - p.get_current_bet() > 0
-        );
+        return this.players.filter((p) => this.is_active(p.get_pid()));
     }
 
     remove_player(pid: string): GameInstance<P> {
-        const copy = this.clone();
-        copy.players.splice(copy.players.findIndex((p) => p.get_pid() === pid));
-        return copy;
+        const new_instance = this.force_action({ type: "fold" }, pid);
+        new_instance.players.splice(
+            new_instance.players.findIndex((p) => p.get_pid() === pid)
+        );
+        return new_instance;
     }
 
     min_bet(): number {
         return max(this.active_players().map((p) => p.get_current_bet())) ?? 0;
     }
 
+    awaited_players(): P[] {
+        const min_bet = this.min_bet();
+        return this.active_players().filter(
+            (p) => !p.get_had_turn() || p.get_current_bet() < min_bet
+        );
+    }
+
     action(action: PlayerAction, pid: string): GameInstance<P> {
-        if (!this.is_current_player(pid)) {
-            throw new Error("Not your turn");
+        if (this.variant === "texas_holdem") {
+            const current_player = this.awaited_players()[0];
+            if (!current_player) {
+                throw new Error("No more turns this round");
+            }
+            if (pid !== current_player.get_pid()) {
+                throw new Error("Not your turn");
+            }
         }
         return this.force_action(action, pid);
     }
 
     force_action(action: PlayerAction, pid: string): GameInstance<P> {
         const new_state = this.clone();
+        const p = new_state.get_player(pid) ?? panic("Invalid Player id");
         if (action.type === "bet") {
-            if (
-                new_state.currentPlayerIndex !== 0 &&
-                action.bet > new_state.min_bet()
-            ) {
-                new_state.betIncreaseIndex = new_state.currentPlayerIndex;
+            if (action.bet < new_state.min_bet()) {
+                throw new Error("Bet too low");
             }
-            (
-                new_state.get_player(pid) ?? panic("Invalid Player id")
-            ).update_current_bet(action.bet);
+            p.set_had_turn(true);
+            p.update_current_bet(action.bet);
         } else if (action.type === "fold") {
-            (new_state.get_player(pid) ?? panic("Invalid Player id")).fold();
+            p.fold();
         }
-        return new_state.compute_next_player();
-    }
 
-    compute_next_player(): GameInstance<P> {
-        const new_state = this.clone();
-        new_state.next_player();
-        while (
-            (() => {
-                return (
-                    new_state.get_current_player().is_folded() ||
-                    new_state.get_current_player().get_chip_amount() -
-                        new_state.get_current_player().get_current_bet() <=
-                        0 ||
-                    new_state.active_players().length <= 1
-                );
-            })() &&
-            !new_state.restartAt
-        ) {
-            new_state.next_player();
+        const awaited_players = new_state.awaited_players();
+
+        if (awaited_players.length !== 0) {
+            return new_state;
         }
+
+        new_state.players.forEach((p) => {
+            new_state.pot += p.get_current_bet();
+            p.update_chip_amount(p.get_chip_amount() - p.get_current_bet());
+            p.update_current_bet(0);
+            p.set_had_turn(false);
+        });
+
+        if (new_state.centerRevealAmount === 0) {
+            new_state.centerRevealAmount = 3;
+        } else {
+            new_state.centerRevealAmount++;
+        }
+        if (
+            new_state.centerRevealAmount === 6 ||
+            new_state.active_players().length <= 1
+        ) {
+            new_state.centerRevealAmount = 5;
+            new_state.end_game();
+        }
+
         return new_state;
     }
 
-    private next_player(): void {
-        this.currentPlayerIndex =
-            (this.currentPlayerIndex + 1) % this.players.length;
-
-        if (this.currentPlayerIndex !== 0) {
-            return;
-        }
-
-        if (this.betIncreaseIndex !== 0) {
-            this.betIncreaseIndex = 0;
-        } else {
-            this.players.map((p) => {
-                this.pot += p.get_current_bet();
-                p.update_chip_amount(p.get_chip_amount() - p.get_current_bet());
-                p.update_current_bet(0);
-            });
-            if (this.centerRevealAmount === 0) {
-                this.centerRevealAmount = 3;
-            } else {
-                this.centerRevealAmount++;
-            }
-            if (this.centerRevealAmount === 6) {
-                this.centerRevealAmount = 5;
-                this.end_game();
-            }
-        }
-    }
-
     get_winners(): P[] {
-        let possible_winners = this.players
-            .filter((player) => !player.is_folded())
-            .map((p) => ({
-                player: p,
-                combination: pipe(
-                    get_combination(p.get_cards().concat(this.centerCards)),
-                    (v) => {
-                        if (v.type === "none") {
-                            return { base_score: 0, score: 0 };
-                        } else {
-                            return v;
-                        }
+        let possible_winners = this.active_players().map((p) => ({
+            player: p,
+            combination: pipe(
+                get_combination(p.get_cards().concat(this.centerCards)),
+                (v) => {
+                    if (v.type === "none") {
+                        return { base_score: 0, score: 0 };
+                    } else {
+                        return v;
                     }
-                ),
-            }));
+                }
+            ),
+        }));
         const req_base_score =
             max(possible_winners.map((p) => p.combination.base_score)) ?? 0;
         possible_winners = possible_winners.filter(
@@ -225,16 +222,23 @@ export class GameInstance<P extends Player> {
             (p) => p.combination.score >= req_score
         );
 
-        return possible_winners.map((p) => p.player);
+        return possible_winners.map((v) => v.player);
     }
 
     end_game(): void {
         this.centerRevealAmount = 5;
         const winners = this.get_winners();
-        const winner_pot = this.pot / winners.length;
-        winners.forEach((p) => {
-            p.update_chip_amount(p.get_chip_amount() + winner_pot);
-        });
+        if (isNonEmptyArray(winners)) {
+            const winner_pot = this.pot / winners.length;
+            winners.forEach((p) => {
+                p.update_chip_amount(p.get_chip_amount() + winner_pot);
+            });
+        } else {
+            console.warn(
+                "There are no winners, this means something likely went wrong, voiding the pot",
+                JSON.stringify(this, null, 2)
+            );
+        }
         this.restartAt = dayjs().add(5, "second").toDate();
     }
 
@@ -253,7 +257,7 @@ export class GameInstance<P extends Player> {
             centerCards: this.centerCards.map((c, i) =>
                 i < this.centerRevealAmount ? c : "hidden"
             ),
-            players: this.players.map((p, i) => {
+            players: this.players.map((p) => {
                 const you = p.get_pid() === pid;
                 const show = you || spectating || ended;
                 const [card1, card2] = p.get_cards();
@@ -264,7 +268,13 @@ export class GameInstance<P extends Player> {
                     card2: show ? card2 : "hidden",
                     name: p.get_name(),
                     remainingChips: p.get_chip_amount(),
-                    turn: i === this.currentPlayerIndex,
+                    turn:
+                        this.variant === "texas_holdem"
+                            ? this.awaited_players()[0]?.get_pid() ===
+                              p.get_pid()
+                            : this.awaited_players()
+                                  .map((p) => p.get_pid())
+                                  .includes(p.get_pid()),
                     you,
                     id: p.get_pid(),
                 };
