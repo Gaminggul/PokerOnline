@@ -42,7 +42,7 @@
         "react-dropzone": "^14.2.3",
         "sharp": "^0.32.1",
         "superjson": "1.12.4",
-        "three": "^0.153.0",
+        "three": "^0.154.0",
         "ts-arithmetic": "^0.1.1",
         "uploadthing": "^5.0.0",
         "uuid": "^9.0.0",
