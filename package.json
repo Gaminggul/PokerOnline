@@ -41,7 +41,7 @@
         "react-dom": "18.2.0",
         "react-dropzone": "^14.2.3",
         "sharp": "^0.32.1",
-        "superjson": "1.12.4",
+        "superjson": "1.13.1",
         "three": "^0.153.0",
         "ts-arithmetic": "^0.1.1",
         "uploadthing": "^5.0.0",
