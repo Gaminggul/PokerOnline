@@ -2,9 +2,9 @@ import { signOut, useSession } from "next-auth/react";
 import Image from "next/image";
 import Link from "next/link";
 import { type PropsWithChildren } from "react";
-import { noop } from "../utils/common";
 import { useChannel } from "../code/pusher";
 import { api } from "../utils/api";
+import { noop } from "functional-utilities";
 
 export function Layout(props: PropsWithChildren<{ show_banner: boolean }>) {
     return (

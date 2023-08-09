@@ -79,16 +79,22 @@ model Session {
 }
 
 model Player {
-    id          String  @id
+    id          String      @id
     card1       String
     card2       String
-    folded      Boolean
+    state       PlayerState
     chip_amount Int
     bet         Int
-    game        Game    @relation(fields: [gameId], references: [id], onDelete: Cascade)
+    game        Game        @relation(fields: [gameId], references: [id], onDelete: Cascade)
     gameId      String
-    user        User    @relation(fields: [id], references: [id])
+    user        User        @relation(fields: [id], references: [id])
     had_turn    Boolean
+}
+
+enum PlayerState {
+    active
+    folded
+    allin
 }
 
 model Game {

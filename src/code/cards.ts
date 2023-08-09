@@ -21,15 +21,17 @@ const ranks = [
     ["ace", 14],
 ] as const;
 
-const score_map = new Map(ranks.map(([rank, score]) => [rank, score]));
-
-type RankId = (typeof ranks)[number][0];
-
 export const cards = suits.flatMap((suit) =>
     ranks.map(([rank]) => `${suit}_${rank}` as const)
 );
 
 export type CardId = (typeof cards)[number];
+
+type RankId = (typeof ranks)[number][0];
+
+const score_map = new Map(ranks.map(([rank, score]) => [rank, score]));
+
+
 
 export type CombinationId =
     | "royal_flush"
@@ -324,9 +326,9 @@ export type CombinationResult =
       };
 
 export function get_combination(
-    cards: (CardId | "hidden")[]
+    cards: CardId[]
 ): CombinationResult {
-    if (cards.length === 0 || cards.some((card) => card === "hidden")) {
+    if (cards.length === 0) {
         return {
             type: "none",
         };
@@ -367,3 +369,8 @@ export function get_combination(
         base_score: best_combination.base_score,
     };
 }
+
+export function filter_cards(cards: (CardId | "hidden")[]): CardId[] {
+    return cards.filter((card) => card !== "hidden") as CardId[];
+}
+

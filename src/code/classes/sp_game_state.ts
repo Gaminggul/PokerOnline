@@ -6,38 +6,33 @@ import { type CardId } from "../cards";
 import type { PlayerAction } from "../game_data";
 import { v4 } from "uuid";
 import type { NonEmptyArray } from "functional-utilities";
+import { type BotConfig } from "../bot";
+import { type GetProperties } from "../../utils/get_properties";
+import { PlayerState } from "@prisma/client";
 
 export class SPPlayer implements Player {
     id: string;
     card1: CardId;
     card2: CardId;
-    folded: boolean;
+    state: PlayerState;
     chip_amount: number;
     bet: number;
     gameId: string;
     had_turn: boolean;
     name: string;
+    bot: BotConfig | undefined;
 
-    constructor(
-        id: string,
-        card1: string,
-        card2: string,
-        folded: boolean,
-        chip_amount: number,
-        bet: number,
-        gameId: string,
-        had_turn: boolean,
-        name: string
-    ) {
-        this.id = id;
-        this.card1 = CardIdSchema.parse(card1);
-        this.card2 = CardIdSchema.parse(card2);
-        this.folded = folded;
-        this.chip_amount = chip_amount;
-        this.bet = bet;
-        this.gameId = gameId;
-        this.had_turn = had_turn;
-        this.name = name;
+    constructor(data: GetProperties<SPPlayer>) {
+        this.id = data.id;
+        this.card1 = data.card1;
+        this.card2 = data.card2;
+        this.state = data.state;
+        this.chip_amount = data.chip_amount;
+        this.bet = data.bet;
+        this.gameId = data.gameId;
+        this.had_turn = data.had_turn;
+        this.name = data.name;
+        this.bot = data.bot;
     }
 
     get_pid(): string {
@@ -45,11 +40,11 @@ export class SPPlayer implements Player {
     }
 
     get_name(): string {
-        return this.id;
+        return this.name;
     }
 
-    is_folded(): boolean {
-        return this.folded;
+   get_state(): PlayerState {
+        return this.state;
     }
 
     get_chip_amount(): number {
@@ -69,7 +64,7 @@ export class SPPlayer implements Player {
     }
 
     fold(): void {
-        this.folded = true;
+        this.state = "folded";
     }
 
     get_cards(): [CardId, CardId] {
@@ -99,7 +94,12 @@ export class SPGameState implements GameState<SPPlayer> {
 
     static generate(
         game_id: string,
-        users: NonEmptyArray<{ id: string; name: string; chips: number }>,
+        users: NonEmptyArray<{
+            id: string;
+            name: string;
+            chips: number;
+            bot: BotConfig | undefined;
+        }>,
         variant: GameVariants
     ): SPGameState {
         const new_instance = GameInstance.generate(
@@ -107,17 +107,18 @@ export class SPGameState implements GameState<SPPlayer> {
             users,
             variant,
             (user, data) =>
-                new SPPlayer(
-                    user.id,
-                    data.card1,
-                    data.card2,
-                    data.folded,
-                    100,
-                    data.bet,
-                    game_id,
-                    data.had_turn,
-                    user.name
-                )
+                new SPPlayer({
+                    id: user.id,
+                    card1: data.card1,
+                    card2: data.card2,
+                    state: data.state,
+                    chip_amount: user.chips,
+                    bet: data.bet,
+                    gameId: game_id,
+                    had_turn: data.had_turn,
+                    name: user.name,
+                    bot: user.bot,
+                })
         );
         return new SPGameState(new_instance);
     }
@@ -129,17 +130,18 @@ export class SPGameState implements GameState<SPPlayer> {
                 this.instance.players,
                 this.instance.variant,
                 (u, data, game_id) =>
-                    new SPPlayer(
-                        u.id,
-                        data.card1,
-                        data.card2,
-                        data.folded,
-                        u.chip_amount,
-                        data.bet,
-                        game_id,
-                        data.had_turn,
-                        u.name
-                    )
+                    new SPPlayer({
+                        id: u.id,
+                        card1: data.card1,
+                        card2: data.card2,
+                        state: data.state,
+                        chip_amount: u.chip_amount,
+                        bet: data.bet,
+                        gameId: game_id,
+                        had_turn: data.had_turn,
+                        name: u.name,
+                        bot: u.bot,
+                    })
             )
         );
     }

@@ -1,2 +1,2 @@
 [workspace]
-members=["src/scripts/socket"]
+members=["src/rlibs/socket", "src/rlibs/game"]

@@ -1,19 +1,19 @@
 import { useRouter } from "next/router";
 import { useEffect, useRef, useState } from "react";
-import { api } from "../../../../utils/api";
-import { Layout } from "../../../../components/layout";
-import { subscribe, unsubscribe, useChannel } from "../../../../code/pusher";
-import { Timer } from "../../../../components/timer";
+import { api } from "../../../utils/api";
+import { Layout } from "../../../components/layout";
+import { subscribe, unsubscribe, useChannel } from "../../../code/pusher";
+import { Timer } from "../../../components/timer";
 import {
     type VisualGameState,
     VisualGameStateSchema,
     type VisualLobbyState,
     VisualLobbyStateSchema,
-} from "../../../../code/game_data";
-import Table from "../../../../components/table";
-import { player_start_amount } from "../../../../code/constants";
+} from "../../../code/game_data";
+import { Table } from "../../../components/table";
+import { player_start_amount } from "../../../code/constants";
 import { useSession } from "next-auth/react";
-import { createJsonSchema } from "../../../../utils/json_util";
+import { createJsonSchema } from "../../../utils/json_util";
 
 type Comparator<T> = (prev: T, next: T) => boolean;
 
@@ -37,12 +37,11 @@ function useConditionalMemo<T>(
 
 function Lobby() {
     const router = useRouter();
-    const size = parseInt(router.query.size as string);
-    const access = router.query.access as string;
+    const id = router.query.id as string;
 
     const [lobby, setLobby] = useState<VisualLobbyState | null>(null);
     const joiningRef = useRef(false);
-    const joinLobby = api.lobby.joinLobby.useMutation();
+    const joinAction = api.lobby.lobbyAction.useMutation();
     const lobbyQuery = api.lobby.getLobby.useQuery(undefined, { cacheTime: 0 });
     const pongMutation = api.lobby.pong.useMutation();
 
@@ -87,7 +86,7 @@ function Lobby() {
             console.log("Joining lobby");
             joiningRef.current = true;
             schedule_update = true;
-            joinLobby.mutate(
+            joinAction.mutate(
                 { size, access },
                 {
                     onSettled: (data) => {
@@ -110,7 +109,7 @@ function Lobby() {
                 }, 1000);
             }
         };
-    }, [access, size, joinLobby, lobbyQuery, router]);
+    }, [joinAction, lobbyQuery, router]);
 
     useEffect(() => {
         if (lobbyQuery.data) {

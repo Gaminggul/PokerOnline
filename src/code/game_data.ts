@@ -4,6 +4,12 @@ import { CardIdSchema } from "./card_tuple";
 
 const VisualCardSchema = z.union([CardIdSchema, z.literal("hidden")]);
 
+export const PlayerStateSchema = z.union([
+    z.literal("folded"),
+    z.literal("allin"),
+    z.literal("active"),
+]);
+
 export const VisualPlayerStateSchema = z.object({
     id: z.string(),
     name: z.string(),
@@ -13,14 +19,14 @@ export const VisualPlayerStateSchema = z.object({
     remainingChips: z.number(),
     card1: VisualCardSchema,
     card2: VisualCardSchema,
-    folded: z.boolean(),
+    state: PlayerStateSchema,
 });
 
 export type VisualPlayerState = z.infer<typeof VisualPlayerStateSchema>;
 
 export const VisualGameStateSchema = z.object({
     id: z.string(),
-    centerCards: z.array(z.union([CardIdSchema, z.literal("hidden")])),
+    centerCards: z.array(VisualCardSchema),
     pot: z.number(),
     players: VisualPlayerStateSchema.array(),
     restartAt: z.number().optional(),
@@ -38,7 +44,7 @@ export const VisualLobbyStateSchema = z.object({
         z.object({
             id: z.string(),
             name: z.string(),
-        })
+        }),
     ),
     startAt: z.date().optional(),
     blindIndex: z.number(),

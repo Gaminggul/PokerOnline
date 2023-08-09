@@ -1,10 +1,11 @@
+import { PlayerState } from "@prisma/client";
 import { type CardId } from "../cards";
 import { type GameInstance } from "../classes/game_instance";
 
 export interface Player {
     get_pid(): string;
     get_name(): string;
-    is_folded(): boolean;
+    get_state(): PlayerState;
     get_chip_amount(): number;
     get_current_bet(): number;
     update_chip_amount(amount: number): void;

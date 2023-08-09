@@ -5,6 +5,8 @@ import type {
     Player as PrismaPlayer,
     Game as PrismaGame,
     User as PrismaUser,
+    PlayerState,
+    $Enums,
 } from "@prisma/client";
 import { CardIdSchema, CardIdsSchema } from "../card_tuple";
 import { type CardId } from "../cards";
@@ -18,7 +20,7 @@ export class MPPlayer implements Player, PrismaPlayer {
     id: string;
     card1: string;
     card2: string;
-    folded: boolean;
+    state: PlayerState;
     chip_amount: number;
     bet: number;
     gameId: string;
@@ -33,7 +35,7 @@ export class MPPlayer implements Player, PrismaPlayer {
             prismaPlayer.id,
             prismaPlayer.card1,
             prismaPlayer.card2,
-            prismaPlayer.folded,
+            prismaPlayer.state,
             prismaPlayer.chip_amount,
             prismaPlayer.bet,
             prismaPlayer.gameId,
@@ -47,7 +49,7 @@ export class MPPlayer implements Player, PrismaPlayer {
         id: string,
         card1: string,
         card2: string,
-        folded: boolean,
+        state: PlayerState,
         chip_amount: number,
         bet: number,
         gameId: string,
@@ -58,7 +60,7 @@ export class MPPlayer implements Player, PrismaPlayer {
         this.id = id;
         this.card1 = card1;
         this.card2 = card2;
-        this.folded = folded;
+        this.state = state;
         this.chip_amount = chip_amount;
         this.bet = bet;
         this.gameId = gameId;
@@ -75,8 +77,8 @@ export class MPPlayer implements Player, PrismaPlayer {
         return this.id;
     }
 
-    is_folded(): boolean {
-        return this.folded;
+    get_state(): $Enums.PlayerState {
+        return this.state;
     }
 
     get_chip_amount(): number {
@@ -96,7 +98,7 @@ export class MPPlayer implements Player, PrismaPlayer {
     }
 
     fold(): void {
-        this.folded = true;
+        this.state = "folded";
     }
 
     get_cards(): [CardId, CardId] {
@@ -155,7 +157,7 @@ export class MPGameState implements GameState<MPPlayer> {
                     user.id,
                     data.card1,
                     data.card2,
-                    data.folded,
+                    data.state,
                     user.chips,
                     data.bet,
                     game_id,
@@ -195,7 +197,7 @@ export class MPGameState implements GameState<MPPlayer> {
                             data: {
                                 card1: p.card1,
                                 card2: p.card2,
-                                folded: p.folded,
+                                state: p.state,
                                 chip_amount: p.chip_amount,
                                 bet: p.bet,
                                 had_turn: p.had_turn,

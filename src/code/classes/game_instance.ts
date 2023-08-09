@@ -11,21 +11,16 @@ import type { Player } from "../interfaces/player";
 import { create_deck } from "../create_deck";
 import dayjs from "dayjs";
 import { z } from "zod";
+import type { GetProperties } from "../../utils/get_properties";
+import { PlayerState } from "@prisma/client";
 
 export type NewPlayerData = {
     bet: number;
     card1: CardId;
     card2: CardId;
-    folded: boolean;
+    state: PlayerState;
     had_turn: boolean;
 };
-
-type GetProperties<T> = Pick<
-    T,
-    {
-        [K in keyof T]: T[K] extends (...args: any[]) => any ? never : K;
-    }[keyof T]
->;
 
 export const GameVariantsSchema = z.union([
     z.literal("texas_holdem"),
@@ -74,7 +69,7 @@ export class GameInstance<P extends Player> {
                     //hand: ["spades_10", "hearts_9"],
                     card1: deck.pop() ?? panic("No more cards"),
                     card2: deck.pop() ?? panic("No more cards"),
-                    folded: false,
+                    state: 'active',
                     had_turn: false,
                 } satisfies NewPlayerData,
                 game_id
@@ -116,7 +111,7 @@ export class GameInstance<P extends Player> {
 
     is_active(pid: string): boolean {
         const p = this.get_player(pid) ?? panic(`Player ${pid} not found`);
-        return !p.is_folded() && p.get_chip_amount() - p.get_current_bet() > 0;
+        return (p.get_state() !== 'folded') && p.get_chip_amount() - p.get_current_bet() > 0;
     }
 
     active_players(): P[] {
@@ -263,7 +258,6 @@ export class GameInstance<P extends Player> {
                 const [card1, card2] = p.get_cards();
                 return {
                     bet: p.get_current_bet(),
-                    folded: p.is_folded(),
                     card1: show ? card1 : "hidden",
                     card2: show ? card2 : "hidden",
                     name: p.get_name(),
@@ -277,6 +271,7 @@ export class GameInstance<P extends Player> {
                                   .includes(p.get_pid()),
                     you,
                     id: p.get_pid(),
+                    state: p.get_state(),
                 };
             }),
             pot: this.pot,
