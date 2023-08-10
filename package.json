@@ -15,6 +15,7 @@
     },
     "dependencies": {
         "@next-auth/prisma-adapter": "^1.0.7",
+        "@nextui-org/react": "^2.0.9",
         "@prisma/client": "^5.1.1",
         "@react-spring/three": "^9.7.3",
         "@react-three/drei": "^9.80.1",
@@ -31,6 +32,7 @@
         "@uploadthing/react": "^5.2.0",
         "body-parser": "^1.20.2",
         "dayjs": "^1.11.9",
+        "framer-motion": "^10.15.1",
         "functional-utilities": "^3.5.0",
         "lodash-es": "^4.17.21",
         "next": "13.4.13",
@@ -52,7 +54,6 @@
     },
     "devDependencies": {
         "@types/node": "^20.4.8",
-        "@types/prettier": "^3.0.0",
         "@types/react": "^18.2.18",
         "@types/react-dom": "^18.2.7",
         "@types/superagent": "^4.1.18",

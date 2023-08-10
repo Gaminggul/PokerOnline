@@ -19,7 +19,7 @@ type Comparator<T> = (prev: T, next: T) => boolean;
 
 function useConditionalMemo<T>(
     getValue: () => T,
-    shouldUpdate: Comparator<T> = (prev, next) => prev !== next
+    shouldUpdate: Comparator<T> = (prev, next) => prev !== next,
 ): T {
     const [value, setValue] = useState<T>(getValue());
     const prevValue = useRef<T>(value);
@@ -49,18 +49,18 @@ function Lobby() {
         () => lobby?.channel,
         (prev, next) => {
             return prev !== next;
-        }
+        },
     );
 
     const { data: session } = useSession({ required: true });
-
     const channel = useChannel(channel_name);
+
     useEffect(() => {
         if (channel) {
             channel.unbind("update");
             channel.bind("update", (newData: unknown) => {
                 setLobby(
-                    createJsonSchema(VisualLobbyStateSchema).parse(newData)
+                    createJsonSchema(VisualLobbyStateSchema).parse(newData),
                 );
                 console.log("Lobby updated", newData);
             });
@@ -82,12 +82,18 @@ function Lobby() {
 
     useEffect(() => {
         let schedule_update = false;
-        if (access === "public" && !joiningRef.current) {
+
+        if (!joiningRef.current) {
             console.log("Joining lobby");
             joiningRef.current = true;
             schedule_update = true;
+
             joinAction.mutate(
-                { size, access },
+                id === "join"
+                    ? { action: "join_public", size: 10 }
+                    : id === "create"
+                    ? { action: "create_private" }
+                    : { action: "join_id", id },
                 {
                     onSettled: (data) => {
                         schedule_update = false;
@@ -96,10 +102,10 @@ function Lobby() {
                             void router.push("/");
                             return;
                         }
-                        console.log(`Joined lobby ${data.access}`, data);
+                        console.log(`Joined lobby ${data.id}`, data);
                         setLobby(data);
                     },
-                }
+                },
             );
         }
         return () => {
@@ -109,7 +115,7 @@ function Lobby() {
                 }, 1000);
             }
         };
-    }, [joinAction, lobbyQuery, router]);
+    }, [joinAction, lobbyQuery, router, id]);
 
     useEffect(() => {
         if (lobbyQuery.data) {

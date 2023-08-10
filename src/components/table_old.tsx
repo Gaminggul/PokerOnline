@@ -42,7 +42,7 @@ export const Table: TableComponent = ({
             </div>
             <div className="flex items-center justify-evenly">
                 {(() => {
-                    if (player?.folded) {
+                    if (player?.state === 'folded') {
                         return <p>Folded</p>;
                     }
                     if (player?.card1 && player?.card2) {
@@ -217,7 +217,7 @@ function Player({ player }: { player: VisualPlayerState }) {
             <p>Bet: {player.bet}</p>
             <p>Chips: {player.remainingChips}</p>
             <div className="flex gap-2">
-                {player.folded ? (
+                {player.state === 'folded' ? (
                     <p>Folded</p>
                 ) : (
                     [player.card1, player.card2].map((card, i) => {

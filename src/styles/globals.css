@@ -2,6 +2,8 @@
 @tailwind components;
 @tailwind utilities;
 
+@import url("https://fonts.googleapis.com/css2?family=Oxygen&display=swap");
+
 * {
     font-family: "Oxygen", sans-serif;
     color: rgb(212, 212, 212);
