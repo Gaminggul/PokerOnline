@@ -1,20 +1,25 @@
 import { useSession } from "next-auth/react";
 import { type ReactNode } from "react";
-import { Btn } from "../components/btn";
 import { Layout } from "../components/layout";
 import { api } from "../utils/api";
+import { Button, Card, CardBody, CardHeader, Divider } from "@nextui-org/react";
+import { useRouter } from "next/router";
 
 function OptionBox(props: { title: string; children: ReactNode }) {
     return (
-        <div className="flex h-96 w-80 flex-col gap-2 rounded-lg bg-slate-800 p-4">
-            <h2 className="text-2xl font-bold">{props.title}</h2>
-            <div className="h-full w-full">{props.children}</div>
-        </div>
+        <Card className="h-96 w-80 bg-slate-900 p-4 border-gray-500 border-1" shadow="lg">
+            <CardHeader>
+                <h3 className="my-0 text-2xl font-bold">{props.title}</h3>
+            </CardHeader>
+            <Divider className="bg-white"/>
+            <CardBody>{props.children}</CardBody>
+        </Card>
     );
 }
 
 function Home() {
     const session = useSession();
+    const router = useRouter();
     const globalRoundResetMutation = api.lobby.globalRoundReset.useMutation();
     return (
         <Layout show_banner={true}>
@@ -32,14 +37,34 @@ function Home() {
                     </OptionBox>
                     <OptionBox title="Play">
                         <div className="flex h-full flex-col items-center justify-evenly pb-8">
-                            <Btn text="Join" onClick={"/lobby/join"} />
-                            <Btn text="Create" />
-                            <Btn
-                                text="Reset"
+                            <Button
+                                onClick={() => void router.push("/lobby/play")}
+                                fullWidth
+                                variant="shadow"
+                                color="primary"
+                            >
+                                Join
+                            </Button>
+                            <Button
+                                onClick={() =>
+                                    void router.push("/lobby/create")
+                                }
+                                fullWidth
+                                variant="shadow"
+                                color="success"
+                            >
+                                Create
+                            </Button>
+                            <Button
                                 onClick={() => {
                                     globalRoundResetMutation.mutate();
                                 }}
-                            />
+                                fullWidth
+                                variant="shadow"
+                                color="danger"
+                            >
+                                Reset
+                            </Button>
                         </div>
                     </OptionBox>
                     <OptionBox title="Social">

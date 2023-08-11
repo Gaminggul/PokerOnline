@@ -5,6 +5,7 @@ import { type PropsWithChildren } from "react";
 import { useChannel } from "../code/pusher";
 import { api } from "../utils/api";
 import { noop } from "functional-utilities";
+import { Avatar } from "@nextui-org/react";
 
 export function Layout(props: PropsWithChildren<{ show_banner: boolean }>) {
     return (
@@ -15,7 +16,7 @@ export function Layout(props: PropsWithChildren<{ show_banner: boolean }>) {
                 </div>
             ) : undefined}
             <div className="flex">
-                <main className="min-h-screen w-full overflow-auto bg-slate-700">
+                <main className="min-h-screen w-full overflow-auto bg-slate-800">
                     {props.children}
                 </main>
                 <Sidebar></Sidebar>
@@ -64,10 +65,10 @@ function Profile() {
     return (
         <div className="flex items-center justify-between">
             <p className="text-base">{session?.user.name}</p>
-            <img
+            <Avatar
+                isBordered
+                radius="sm"
                 src={session?.user.image ?? "/favicon.ico"}
-                alt="Profilepic"
-                className="h-12 w-12 rounded-sm"
             />
         </div>
     );

@@ -14,6 +14,7 @@ import { Table } from "../../../components/table";
 import { player_start_amount } from "../../../code/constants";
 import { useSession } from "next-auth/react";
 import { createJsonSchema } from "../../../utils/json_util";
+import { maybe_global } from "functional-utilities";
 
 type Comparator<T> = (prev: T, next: T) => boolean;
 
@@ -33,7 +34,7 @@ function useConditionalMemo<T>(
     }, [getValue, shouldUpdate]);
 
     return value;
-}
+}7
 
 function Lobby() {
     const router = useRouter();
@@ -98,8 +99,16 @@ function Lobby() {
                     onSettled: (data) => {
                         schedule_update = false;
                         if (!data) {
-                            console.log("Failed to join lobby");
+                            console.error("Failed to join lobby");
                             void router.push("/");
+                            return;
+                        } else if (data.id !== id) {
+                            console.log("Joined lobby", data);
+                            maybe_global("window")?.history.replaceState(
+                                null,
+                                "",
+                                `/lobby/${data.id}`,
+                            );
                             return;
                         }
                         console.log(`Joined lobby ${data.id}`, data);
