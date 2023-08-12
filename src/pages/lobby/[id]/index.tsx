@@ -84,7 +84,7 @@ function Lobby() {
     useEffect(() => {
         let schedule_update = false;
 
-        if (!joiningRef.current) {
+        if (!joiningRef.current && id) {
             console.log("Joining lobby");
             joiningRef.current = true;
             schedule_update = true;
@@ -164,8 +164,13 @@ function LobbyWaitPage({ lobby }: { lobby: VisualLobbyState }) {
                     {lobby.users.map((user) => (
                         <div
                             key={user.id}
-                            className="flex flex-col rounded bg-slate-800 p-4"
+                            className="flex flex-col rounded bg-slate-900 p-4"
                         >
+                            {user.id === lobby.ownerId && (
+                                <p className="text-center text-red-500">
+                                    Owner
+                                </p>
+                            )}
                             <p>Name: {user.name}</p>
                             <p>ID: {user.id}</p>
                         </div>

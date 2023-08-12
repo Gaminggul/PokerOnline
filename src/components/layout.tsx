@@ -40,9 +40,6 @@ function Sidebar() {
             <Link href="/">
                 <SidebarButton text="Home" />
             </Link>
-            <Link href="/play">
-                <SidebarButton text="Play" />
-            </Link>
             <Link href="/social">
                 <SidebarButton text="Social" />
             </Link>
