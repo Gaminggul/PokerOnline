@@ -43,6 +43,8 @@
         "react-device-detect": "^2.2.3",
         "react-dom": "18.2.0",
         "react-dropzone": "^14.2.3",
+        "react-icons": "^4.10.1",
+        "react-toggle-dark-mode": "^1.1.1",
         "sharp": "^0.32.4",
         "superjson": "1.13.1",
         "three": "^0.155.0",

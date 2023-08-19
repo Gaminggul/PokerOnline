@@ -51,17 +51,15 @@ type Parser = (value: string) =>
 type InferValue<T extends ValueSchema> = T extends { type: "subobject" }
     ? { [K in keyof T["elements"]]: InferValue<T["elements"][K]> }
     : T extends { type: "union" }
-    ? T["elements"] extends { [key: string]: infer U }
-        ? U
-        : "Error parsing union"
+    ? {
+          [K in keyof T["elements"]]: InferValue<T["elements"][K]>;
+      }[keyof T["elements"]]
     : T extends { type: "constant" }
     ? T["value"]
     : T extends { type: "array" }
     ? InferValue<T["element"]>[]
     : T extends { type: "text_input" }
-    ? ReturnType<T["parse"]> extends { success: true; value: infer U }
-        ? U
-        : "Error parsing text input"
+    ? string // Directly resolve to string
     : never;
 
 const testSchema = {

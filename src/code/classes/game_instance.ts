@@ -120,9 +120,6 @@ export class GameInstance<P extends Player> {
 
     remove_player(pid: string): GameInstance<P> {
         const new_instance = this.force_action({ type: "fold" }, pid);
-        new_instance.players.splice(
-            new_instance.players.findIndex((p) => p.get_pid() === pid)
-        );
         return new_instance;
     }
 

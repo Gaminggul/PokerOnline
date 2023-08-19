@@ -6,6 +6,8 @@ import { v4 } from "uuid";
 import { MPLobby } from "../../../../code/classes/mp_lobby";
 import { Prisma } from "@prisma/client";
 import { User } from "next-auth";
+import { lobby_ready } from "./ready";
+import dayjs from "dayjs";
 
 async function handleCreatePrivate(user: User) {
     const privateLobby = await prisma.lobby.create({
@@ -32,7 +34,11 @@ async function handleCreatePrivate(user: User) {
     }).visualize();
 }
 
-async function handleJoinById(tx: Prisma.TransactionClient, user: User, id: string) {
+async function handleJoinById(
+    tx: Prisma.TransactionClient,
+    user: User,
+    id: string,
+) {
     const existingLobby = await tx.lobby.findUnique({
         where: { id },
         include: { users: true },
@@ -48,6 +54,12 @@ async function handleJoinById(tx: Prisma.TransactionClient, user: User, id: stri
             users: {
                 connect: { id: user.id },
             },
+            startAt:
+                existingLobby.access === "public"
+                    ? lobby_ready(existingLobby, existingLobby.users.length + 1)
+                        ? dayjs().add(10, "second").toDate()
+                        : undefined
+                    : undefined,
         },
         include: { users: true },
     });
@@ -101,6 +113,9 @@ async function handleJoinPublic(tx: Prisma.TransactionClient, user: User) {
                         id: user.id,
                     },
                 },
+                startAt: lobby_ready(publicLobby, publicLobby.users.length + 1)
+                    ? dayjs().add(10, "second").toDate()
+                    : undefined,
             },
             include: {
                 users: true,
@@ -123,7 +138,7 @@ export const lobbyAction = protectedProcedure
             z.object({
                 action: z.literal("create_private"),
             }),
-        ])
+        ]),
     )
     .mutation(async ({ ctx, input }) => {
         const user = ctx.session.user;

@@ -26,10 +26,10 @@ export class MPPlayer implements Player, PrismaPlayer {
     gameId: string;
     had_turn: boolean;
     name: string;
-    channel: string;
+    channel?: string;
 
     static from_prisma_data(
-        prismaPlayer: PrismaPlayer & { user: PrismaUser }
+        prismaPlayer: PrismaPlayer & { user: PrismaUser },
     ): MPPlayer {
         return new this(
             prismaPlayer.id,
@@ -41,7 +41,7 @@ export class MPPlayer implements Player, PrismaPlayer {
             prismaPlayer.gameId,
             prismaPlayer.had_turn,
             prismaPlayer.user.name,
-            prismaPlayer.user.channel ?? `player-${v4()}`
+            prismaPlayer.user.channel ?? `player-${v4()}`,
         );
     }
 
@@ -55,7 +55,7 @@ export class MPPlayer implements Player, PrismaPlayer {
         gameId: string,
         had_turn: boolean,
         name: string,
-        channel: string
+        channel: string,
     ) {
         this.id = id;
         this.card1 = card1;
@@ -120,7 +120,7 @@ export class MPGameState implements GameState<MPPlayer> {
     static from_prisma_data(
         prisma_game: PrismaGame & {
             players: (PrismaPlayer & { user: PrismaUser })[];
-        }
+        },
     ): MPGameState {
         if (!isNonEmptyArray(prisma_game.players)) {
             throw new Error("No players");
@@ -130,7 +130,7 @@ export class MPGameState implements GameState<MPPlayer> {
             centerCards: CardIdsSchema.parse(prisma_game.centerCards),
             centerRevealAmount: prisma_game.centerRevealAmount,
             players: prisma_game.players.map((p) =>
-                MPPlayer.from_prisma_data(p)
+                MPPlayer.from_prisma_data(p),
             ),
             pot: prisma_game.pot,
             restartAt: prisma_game.restartAt ?? undefined,
@@ -146,7 +146,7 @@ export class MPGameState implements GameState<MPPlayer> {
     static generate(
         game_id: string,
         users: NonEmptyArray<MPUser>,
-        variant: GameVariants
+        variant: GameVariants,
     ): MPGameState {
         const new_instance = GameInstance.generate(
             game_id,
@@ -163,22 +163,28 @@ export class MPGameState implements GameState<MPPlayer> {
                     game_id,
                     data.had_turn,
                     user.name,
-                    user.channel ?? `player-${v4()}`
-                )
+                    user.channel ?? `player-${v4()}`,
+                ),
         );
         return new MPGameState(new_instance);
     }
+
+    remove_player(pid: string) {
+        this.instance = this.instance.remove_player(pid);
+    } 
 
     async distribute(): Promise<void> {
         const pusher = create_pusher_server();
         console.log(this.instance.id);
         await Promise.all([
             pusher.triggerBatch(
-                this.instance.players.map((p) => ({
-                    channel: p.channel,
-                    name: "update",
-                    data: this.instance.visualize(p.id),
-                }))
+                this.instance.players
+                    .filter((p) => p.channel)
+                    .map((p) => ({
+                        channel: p.channel as string,
+                        name: "update",
+                        data: this.instance.visualize(p.id),
+                    })),
             ),
             prisma.game.update({
                 where: {

@@ -1,5 +1,7 @@
+import { panic } from "functional-utilities";
 import { prisma } from "../server/db";
 import { MPGameState } from "./classes/mp_game_state";
+import { MPLobby } from "./classes/mp_lobby";
 
 export async function disconnect_user(user_id: string) {
     console.log("Disconnecting user", user_id);
@@ -8,32 +10,32 @@ export async function disconnect_user(user_id: string) {
             id: user_id,
         },
         include: {
-            player: {
+            lobby: {
                 include: {
                     game: {
                         include: {
                             players: {
                                 include: {
-                                    user: true,
-                                },
-                            },
+                                    user: true
+                                }
+                            }
                         },
                     },
-                    user: true,
-                },
-            },
+                    users: true
+                }
+            }
         },
     });
     if (!user) {
         console.log("User not found");
         return;
     }
-    const player = user.player;
-    if (!player) {
-        console.log("Player not found");
+    const lobby = user.lobby;
+    if (!lobby) {
+        console.log("User not in a lobby");
         return;
     }
-    const game = MPGameState.from_prisma_data(player.game);
-    game.instance = game.instance.force_action({ type: "fold" }, player.id);
-    await game.distribute();
+    const mplobby = new MPLobby(lobby);
+    mplobby.remove_user(user_id);
+    await mplobby.distribute()
 }

@@ -35,7 +35,7 @@ export class MPLobby {
                 | null
                 | undefined;
             users: PrismaUser[];
-        }
+        },
     ) {
         this.id = lobby.id;
         this.name = lobby.name ?? undefined;
@@ -67,7 +67,7 @@ export class MPLobby {
             "distributing to",
             this.users.map((u) => u.name),
             "on",
-            this.channel
+            this.channel,
         );
         await Promise.all([
             (async () => {
@@ -97,12 +97,14 @@ export class MPLobby {
     }
 
     remove_user(user_id: string) {
-        this.game?.instance.remove_player(user_id);
+        if (this.game) {
+            this.game.remove_player(user_id);
+        }
         this.users.splice(
             pipe(
                 this.users.findIndex((u) => u.id === user_id),
-                (v) => (v === -1 ? undefined : v)
-            ) ?? panic("User does not exist")
+                (v) => (v === -1 ? undefined : v),
+            ) ?? panic("User does not exist"),
         );
     }
 }

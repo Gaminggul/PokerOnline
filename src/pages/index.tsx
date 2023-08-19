@@ -2,12 +2,12 @@ import { useSession } from "next-auth/react";
 import { type ReactNode } from "react";
 import { Layout } from "../components/layout";
 import { api } from "../utils/api";
-import { Button, Card, CardBody, CardHeader, Divider } from "@nextui-org/react";
+import { Avatar, Button, Card, CardBody, CardHeader, Divider } from "@nextui-org/react";
 import { useRouter } from "next/router";
 
 function OptionBox(props: { title: string; children: ReactNode }) {
     return (
-        <Card className="h-96 w-80 bg-slate-900 p-4 border-gray-500 border-1" shadow="lg">
+        <Card className="h-96 w-80 dark:bg-slate-900 p-4 border-gray-500 border-1" shadow="lg">
             <CardHeader>
                 <h3 className="my-0 text-2xl font-bold">{props.title}</h3>
             </CardHeader>
@@ -23,9 +23,9 @@ function Home() {
     const globalRoundResetMutation = api.lobby.globalRoundReset.useMutation();
     return (
         <Layout show_banner={true}>
-            <div className="flex flex-col p-12 text-white">
-                <h1 className="text-3xl font-bold">
-                    Hello {session.data?.user.name}
+            <div className="flex flex-col p-12">
+                <h1 className="flex text-3xl font-bold gap-2">
+                    Hello {session.data?.user.name} <Avatar src={session.data?.user?.image ?? "/favicon.ico"}></Avatar>
                 </h1>
                 <div className="mt-12 flex justify-evenly gap-4">
                     <OptionBox title="Tournaments">
@@ -38,7 +38,7 @@ function Home() {
                     <OptionBox title="Play">
                         <div className="flex h-full flex-col items-center justify-evenly pb-8">
                             <Button
-                                onClick={() => void router.push("/lobby/play")}
+                                onClick={() => void router.push("/lobby/join")}
                                 fullWidth
                                 variant="shadow"
                                 color="primary"

@@ -15,7 +15,7 @@ type TableComponent = (props: {
     restart_action: () => void;
 }) => JSX.Element;
 
-export const Table: TableComponent = ({
+export const TableOld: TableComponent = ({
     state,
     submit_action,
     restart_action,
@@ -26,7 +26,12 @@ export const Table: TableComponent = ({
     const you_index = state.players.findIndex((player) => player.you);
     const player = state.players[you_index];
     return (
-        <div className="relative flex h-full w-full flex-col gap-8">
+        <div
+            className="relative flex h-full w-full flex-col gap-8 border-4 p-4"
+            style={{
+                borderColor: player?.turn ? "transparent" : "red",
+            }}
+        >
             <p className="text-xs text-gray-800">
                 Table ID: {state.id}, Ended:{" "}
                 {state.restartAt ? "Ended" : "Not end"}
@@ -42,16 +47,16 @@ export const Table: TableComponent = ({
             </div>
             <div className="flex items-center justify-evenly">
                 {(() => {
-                    if (player?.state === 'folded') {
+                    if (player?.state === "folded") {
                         return <p>Folded</p>;
                     }
                     if (player?.card1 && player?.card2) {
                         const combination = get_combination(
                             filter_cards(
                                 [player.card1, player.card2].concat(
-                                    state.centerCards
-                                )
-                            )
+                                    state.centerCards,
+                                ),
+                            ),
                         );
                         if (combination.type === "some") {
                             return (
@@ -90,7 +95,7 @@ export const Table: TableComponent = ({
                                             onChange={(e) => {
                                                 setBetInput(e.target.value);
                                                 const bet = parseInt(
-                                                    e.target.value
+                                                    e.target.value,
                                                 );
                                                 if (!isNaN(bet)) {
                                                     setBet(bet);
@@ -200,7 +205,7 @@ function UiButton({
                 </button>
             ) : (
                 <button
-                    className="rounded-md bg-blue-500 px-4 py-2 text-white"
+                    className="rounded-md bg-blue-500 px-4 py-2"
                     onClick={onClick}
                 >
                     {children}
@@ -217,7 +222,7 @@ function Player({ player }: { player: VisualPlayerState }) {
             <p>Bet: {player.bet}</p>
             <p>Chips: {player.remainingChips}</p>
             <div className="flex gap-2">
-                {player.state === 'folded' ? (
+                {player.state === "folded" ? (
                     <p>Folded</p>
                 ) : (
                     [player.card1, player.card2].map((card, i) => {
