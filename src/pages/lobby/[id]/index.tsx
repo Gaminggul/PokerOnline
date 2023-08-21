@@ -1,5 +1,5 @@
 import { useRouter } from "next/router";
-import { PropsWithChildren, useEffect, useRef, useState } from "react";
+import { type ReactNode, useEffect, useRef, useState } from "react";
 import { api } from "../../../utils/api";
 import { Layout } from "../../../components/layout";
 import { subscribe, unsubscribe, useChannel } from "../../../code/pusher";
@@ -10,7 +10,6 @@ import {
     type VisualLobbyState,
     VisualLobbyStateSchema,
 } from "../../../code/game_data";
-import { Table } from "../../../components/table";
 import { player_start_amount } from "../../../code/constants";
 import { useSession } from "next-auth/react";
 import { createJsonSchema } from "../../../utils/json_util";
@@ -181,11 +180,8 @@ function LobbyWaitPage({ lobby }: { lobby: VisualLobbyState }) {
                     <h2 className="text-center text-3xl font-bold">Players</h2>
                     <div className="flex flex-wrap justify-center gap-4">
                         {lobby.users.map((user) => (
-                            <Corners>
-                                <div
-                                    key={user.id}
-                                    className="flex items-center gap-2 p-4"
-                                >
+                            <Corners key={user.id}>
+                                <div className="flex items-center gap-2 p-4">
                                     <Avatar></Avatar>
                                     {user.id === lobby.ownerId && (
                                         <span className="font-bold text-red-500">
@@ -236,7 +232,9 @@ function LobbyWaitPage({ lobby }: { lobby: VisualLobbyState }) {
     );
 }
 
-function Corners({ children }: PropsWithChildren<{}>) {
+function Corners({ children }: {
+    children: ReactNode;
+}) {
     return (
         <div className="relative">
             <div className="h-full w-full shadow-md">{children}</div>
