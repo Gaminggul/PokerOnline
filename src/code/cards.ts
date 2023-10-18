@@ -22,7 +22,7 @@ const ranks = [
 ] as const;
 
 export const cards = suits.flatMap((suit) =>
-    ranks.map(([rank]) => `${suit}_${rank}` as const)
+    ranks.map(([rank]) => `${suit}_${rank}` as const),
 );
 
 export type CardId = (typeof cards)[number];
@@ -30,8 +30,6 @@ export type CardId = (typeof cards)[number];
 type RankId = (typeof ranks)[number][0];
 
 const score_map = new Map(ranks.map(([rank, score]) => [rank, score]));
-
-
 
 export type CombinationId =
     | "royal_flush"
@@ -51,19 +49,25 @@ function parse_card(card: CardId): [SuitId, RankId] {
 }
 
 function split_into_suits(cards: CardId[]): Record<SuitId, CardId[]> {
-    return cards.reduce((acc, card) => {
-        const [suit] = parse_card(card);
-        acc[suit] = [...(acc[suit] || []), card];
-        return acc;
-    }, {} as Record<SuitId, CardId[]>);
+    return cards.reduce(
+        (acc, card) => {
+            const [suit] = parse_card(card);
+            acc[suit] = [...(acc[suit] || []), card];
+            return acc;
+        },
+        {} as Record<SuitId, CardId[]>,
+    );
 }
 
 function split_into_ranks(cards: CardId[]): Record<RankId, CardId[]> {
-    return cards.reduce((acc, card) => {
-        const [, rank] = parse_card(card);
-        acc[rank] = [...(acc[rank] || []), card];
-        return acc;
-    }, {} as Record<RankId, CardId[]>);
+    return cards.reduce(
+        (acc, card) => {
+            const [, rank] = parse_card(card);
+            acc[rank] = [...(acc[rank] || []), card];
+            return acc;
+        },
+        {} as Record<RankId, CardId[]>,
+    );
 }
 
 function get_card_score(card: CardId): number {
@@ -129,7 +133,7 @@ function rank_evaluate(rank_amounts: number[]): CombinationEvaluator {
         const ranks = split_into_ranks(cards);
         const remaining_sorted_ranks = sortBy(
             typed_entries(ranks),
-            ([, cards]) => cards.length
+            ([, cards]) => cards.length,
         );
         let score = 0;
         for (const rank_amount of sorted_rank_amounts) {
@@ -145,9 +149,9 @@ function rank_evaluate(rank_amounts: number[]): CombinationEvaluator {
                 maxBy(
                     valid_ranks.map(
                         (v) =>
-                            [v[0], get_rank_score(v[1][0])] as [number, number]
+                            [v[0], get_rank_score(v[1][0])] as [number, number],
                     ),
-                    ([, score]) => score
+                    ([, score]) => score,
                 ) ?? panic("No best rank");
             remaining_sorted_ranks.splice(best_rank[0], 1);
             score += best_rank[1] * rank_amount;
@@ -231,7 +235,7 @@ export const combinations = [
         evaluate: (cards: CardId[]) => {
             const suits = split_into_suits(cards);
             const valid_suits = Object.values(suits).filter(
-                (cards) => cards.length >= 5
+                (cards) => cards.length >= 5,
             );
             if (valid_suits.length === 0) {
                 return {
@@ -239,13 +243,13 @@ export const combinations = [
                 };
             }
             const sorted_suits = sortBy(valid_suits, (cards) =>
-                get_card_score(cards[0] ?? panic("No cards"))
+                get_card_score(cards[0] ?? panic("No cards")),
             );
             const combination_cards = sorted_suits[0]?.slice(0, 5);
             return {
                 type: "some",
                 score: get_card_score(
-                    combination_cards?.[0] ?? panic("No cards")
+                    combination_cards?.[0] ?? panic("No cards"),
                 ),
             };
         },
@@ -266,7 +270,7 @@ export const combinations = [
         evaluate: (cards: CardId[]) => {
             const suit_sequences = calculateSuitSequences(cards);
             const valid_suit_sequences = suit_sequences.filter(
-                ([, sequence]) => sequence.length >= 5
+                ([, sequence]) => sequence.length >= 5,
             );
             if (valid_suit_sequences.length === 0) {
                 return {
@@ -278,8 +282,9 @@ export const combinations = [
                 score:
                     max(
                         valid_suit_sequences.map(
-                            ([, sequence]) => max(sequence) ?? panic("No cards")
-                        )
+                            ([, sequence]) =>
+                                max(sequence) ?? panic("No cards"),
+                        ),
                     ) ?? panic("No cards"),
                 suit: (valid_suit_sequences[0] ?? panic())[0], // add the suit to the returned value
             };
@@ -291,7 +296,7 @@ export const combinations = [
         evaluate: (cards: CardId[]) => {
             const suit_sequences = calculateSuitSequences(cards);
             const royal_sequences = suit_sequences.filter(
-                ([, sequence]) => sequence.includes(14) && sequence.length >= 5
+                ([, sequence]) => sequence.includes(14) && sequence.length >= 5,
             );
             if (royal_sequences.length === 0) {
                 return {
@@ -303,8 +308,9 @@ export const combinations = [
                 score:
                     max(
                         royal_sequences.map(
-                            ([, sequence]) => max(sequence) ?? panic("No cards")
-                        )
+                            ([, sequence]) =>
+                                max(sequence) ?? panic("No cards"),
+                        ),
                     ) ?? panic("No cards"),
                 suit: (royal_sequences[0] ?? panic())[0], // add the suit to the returned value
             };
@@ -325,9 +331,7 @@ export type CombinationResult =
           type: "none";
       };
 
-export function get_combination(
-    cards: CardId[]
-): CombinationResult {
+export function get_combination(cards: CardId[]): CombinationResult {
     if (cards.length === 0) {
         return {
             type: "none",
@@ -359,7 +363,7 @@ export function get_combination(
     const best_combination =
         maxBy(
             combinations_with_cards,
-            (combination) => combination.base_score
+            (combination) => combination.base_score,
         ) ?? panic("No combinations");
     return {
         type: "some",
@@ -373,4 +377,3 @@ export function get_combination(
 export function filter_cards(cards: (CardId | "hidden")[]): CardId[] {
     return cards.filter((card) => card !== "hidden") as CardId[];
 }
-

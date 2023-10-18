@@ -83,7 +83,7 @@ export const gameRouter = createTRPCRouter({
         const generated_game = MPGameState.generate(
             lobby.game.id,
             lobby.game.players.map((p) => new MPUser(p.user)),
-            "texas_holdem"
+            "texas_holdem",
         );
         await generated_game.distribute();
     }),

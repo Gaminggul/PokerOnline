@@ -16,7 +16,7 @@ const pusher_existence_schema = z.object({
                 z.literal("channel_vacated"),
                 z.literal("channel_occupied"),
             ]),
-        })
+        }),
     ),
 });
 
@@ -64,7 +64,7 @@ async function handle_event(event: PusherExistence["events"][number]) {
         id: v4(),
     };
     const request_url = `https://hooket.moeglich.dev/hooket/set_timer?at=${timeout_time.toISOString()}&webhook=${encodeURIComponent(
-        "https://proxy.moeglich.dev/poker_timer"
+        "https://proxy.moeglich.dev/poker_timer",
     )}`;
     console.log(request_url);
     await superagent

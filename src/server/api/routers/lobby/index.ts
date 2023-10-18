@@ -8,8 +8,6 @@ import { MPLobby } from "../../../../code/classes/mp_lobby";
 import { lobbyAction } from "./action";
 import { lobby_ready } from "./ready";
 
-
-
 export const lobbyRouter = createTRPCRouter({
     pong: protectedProcedure.mutation(async ({ ctx }) => {
         const user = ctx.session.user;
@@ -108,7 +106,7 @@ export const lobbyRouter = createTRPCRouter({
         const generated_game = MPGameState.generate(
             v4(),
             lobby.users,
-            "texas_holdem"
+            "texas_holdem",
         );
         const game_data = await prisma.game.create({
             data: {

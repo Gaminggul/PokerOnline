@@ -2,16 +2,26 @@ import { useSession } from "next-auth/react";
 import { type ReactNode } from "react";
 import { Layout } from "../components/layout";
 import { api } from "../utils/api";
-import { Avatar, Button, Card, CardBody, CardHeader, Divider } from "@nextui-org/react";
+import {
+    Avatar,
+    Button,
+    Card,
+    CardBody,
+    CardHeader,
+    Divider,
+} from "@nextui-org/react";
 import { useRouter } from "next/router";
 
 function OptionBox(props: { title: string; children: ReactNode }) {
     return (
-        <Card className="h-96 w-80 dark:bg-slate-900 p-4 border-gray-500 border-1" shadow="lg">
+        <Card
+            className="h-96 w-80 border-1 border-gray-500 p-4 dark:bg-slate-900"
+            shadow="lg"
+        >
             <CardHeader>
                 <h3 className="my-0 text-2xl font-bold">{props.title}</h3>
             </CardHeader>
-            <Divider className="bg-white"/>
+            <Divider className="bg-white" />
             <CardBody>{props.children}</CardBody>
         </Card>
     );
@@ -24,8 +34,11 @@ function Home() {
     return (
         <Layout show_banner={true}>
             <div className="flex flex-col p-12">
-                <h1 className="flex text-3xl font-bold gap-2">
-                    Hello {session.data?.user.name} <Avatar src={session.data?.user?.image ?? "/favicon.ico"}></Avatar>
+                <h1 className="flex gap-2 text-3xl font-bold">
+                    Hello {session.data?.user.name}{" "}
+                    <Avatar
+                        src={session.data?.user?.image ?? "/favicon.ico"}
+                    ></Avatar>
                 </h1>
                 <div className="mt-12 flex justify-evenly gap-4">
                     <OptionBox title="Tournaments">

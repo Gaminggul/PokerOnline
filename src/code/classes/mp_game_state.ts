@@ -1,5 +1,9 @@
 import type { GameVariants } from "./game_instance";
-import { GameInstance, GameVariantsSchema } from "./game_instance";
+import {
+    GameInstance,
+    GameVariantsSchema,
+    PureGameState,
+} from "./game_instance";
 import type { GameState, Player } from "../interfaces/player";
 import type {
     Player as PrismaPlayer,
@@ -114,6 +118,11 @@ export class MPPlayer implements Player, PrismaPlayer {
     }
 }
 
+const events = {
+    on_end: (winners) => {},
+    on_start: () => {},
+} satisfies typeof GameInstance.prototype.events;
+
 export class MPGameState implements GameState<MPPlayer> {
     instance: GameInstance<MPPlayer>;
 
@@ -127,14 +136,17 @@ export class MPGameState implements GameState<MPPlayer> {
         }
         const instance = new GameInstance<MPPlayer>({
             id: prisma_game.id,
-            centerCards: CardIdsSchema.parse(prisma_game.centerCards),
-            centerRevealAmount: prisma_game.centerRevealAmount,
-            players: prisma_game.players.map((p) =>
-                MPPlayer.from_prisma_data(p),
-            ),
-            pot: prisma_game.pot,
+            current_game_state: new PureGameState({
+                centerCards: CardIdsSchema.parse(prisma_game.centerCards),
+                centerRevealAmount: prisma_game.centerRevealAmount,
+                players: prisma_game.players.map((p) =>
+                    MPPlayer.from_prisma_data(p),
+                ),
+                pot: prisma_game.pot,
+                variant: GameVariantsSchema.parse(prisma_game.variant),
+            }),
             restartAt: prisma_game.restartAt ?? undefined,
-            variant: GameVariantsSchema.parse(prisma_game.variant),
+            events,
         });
         return new MPGameState(instance);
     }
@@ -148,7 +160,7 @@ export class MPGameState implements GameState<MPPlayer> {
         users: NonEmptyArray<MPUser>,
         variant: GameVariants,
     ): MPGameState {
-        const new_instance = GameInstance.generate(
+        const new_instance = GameInstance.generate_new(
             game_id,
             users,
             variant,
@@ -165,20 +177,21 @@ export class MPGameState implements GameState<MPPlayer> {
                     user.name,
                     user.channel ?? `player-${v4()}`,
                 ),
+            events,
         );
         return new MPGameState(new_instance);
     }
 
     remove_player(pid: string) {
-        this.instance = this.instance.remove_player(pid);
-    } 
+        this.instance.remove_player(pid);
+    }
 
     async distribute(): Promise<void> {
         const pusher = create_pusher_server();
         console.log(this.instance.id);
         await Promise.all([
             pusher.triggerBatch(
-                this.instance.players
+                this.instance.current_game_state.players
                     .filter((p) => p.channel)
                     .map((p) => ({
                         channel: p.channel as string,
@@ -191,36 +204,43 @@ export class MPGameState implements GameState<MPPlayer> {
                     id: this.instance.id,
                 },
                 data: {
-                    centerCards: this.instance.centerCards,
-                    centerRevealAmount: this.instance.centerRevealAmount,
-                    pot: this.instance.pot,
+                    centerCards: this.instance.current_game_state.centerCards,
+                    centerRevealAmount:
+                        this.instance.current_game_state.centerRevealAmount,
+                    pot: this.instance.current_game_state.pot,
                     restartAt: this.instance.restartAt ?? null,
                     players: {
-                        updateMany: this.instance.players.map((p) => ({
-                            where: {
-                                id: p.id,
-                            },
-                            data: {
-                                card1: p.card1,
-                                card2: p.card2,
-                                state: p.state,
-                                chip_amount: p.chip_amount,
-                                bet: p.bet,
-                                had_turn: p.had_turn,
-                            },
-                        })),
-                    },
-                    lobby: {
-                        update: {
-                            users: {
-                                updateMany: this.instance.players.map((p) => ({
+                        updateMany:
+                            this.instance.current_game_state.players.map(
+                                (p) => ({
                                     where: {
                                         id: p.id,
                                     },
                                     data: {
-                                        channel: p.channel,
+                                        card1: p.card1,
+                                        card2: p.card2,
+                                        state: p.state,
+                                        chip_amount: p.chip_amount,
+                                        bet: p.bet,
+                                        had_turn: p.had_turn,
                                     },
-                                })),
+                                }),
+                            ),
+                    },
+                    lobby: {
+                        update: {
+                            users: {
+                                updateMany:
+                                    this.instance.current_game_state.players.map(
+                                        (p) => ({
+                                            where: {
+                                                id: p.id,
+                                            },
+                                            data: {
+                                                channel: p.channel,
+                                            },
+                                        }),
+                                    ),
                             },
                         },
                     },

@@ -1,5 +1,5 @@
 type Validator<T> = (
-    str: T
+    str: T,
 ) => { valid: true } | { valid: false; error: string };
 
 type StringInput = {

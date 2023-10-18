@@ -232,9 +232,7 @@ function LobbyWaitPage({ lobby }: { lobby: VisualLobbyState }) {
     );
 }
 
-function Corners({ children }: {
-    children: ReactNode;
-}) {
+function Corners({ children }: { children: ReactNode }) {
     return (
         <div className="relative">
             <div className="h-full w-full shadow-md">{children}</div>

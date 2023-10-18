@@ -16,11 +16,9 @@ import type {
     ZodString,
     ZodTuple,
     ZodType,
-    ZodUnion} from "zod";
-import {
-    ZodFirstPartyTypeKind,
-    z,
+    ZodUnion,
 } from "zod";
+import { ZodFirstPartyTypeKind, z } from "zod";
 
 type JsonifiedType<T extends ZodType<any, any, any>> = T extends z.ZodString
     ? z.ZodString
@@ -111,13 +109,13 @@ function isZodArray(schema: ZodType<any, any, any>): schema is ZodArray<any> {
 }
 
 function isZodOptional(
-    schema: ZodType<any, any, any>
+    schema: ZodType<any, any, any>,
 ): schema is ZodOptional<any> {
     return schema._def.typeName === ZodFirstPartyTypeKind.ZodOptional;
 }
 
 function isZodNullable(
-    schema: ZodType<any, any, any>
+    schema: ZodType<any, any, any>,
 ): schema is ZodNullable<any> {
     return schema._def.typeName === ZodFirstPartyTypeKind.ZodNullable;
 }
@@ -141,7 +139,7 @@ function isZodRecord(schema: ZodType<any, any, any>): schema is ZodRecord<any> {
 }
 
 function isZodLiteral(
-    schema: ZodType<any, any, any>
+    schema: ZodType<any, any, any>,
 ): schema is ZodLiteral<any> {
     return schema._def.typeName === ZodFirstPartyTypeKind.ZodLiteral;
 }
@@ -167,7 +165,7 @@ function isZodBoolean(schema: ZodType<any, any, any>): schema is ZodBoolean {
 }
 
 export function jsonifySchema<T extends ZodType<any, any, any>>(
-    schema: T
+    schema: T,
 ): JsonifiedType<T> {
     if (isZodObject(schema)) {
         const objectShape = schema.shape;
@@ -186,12 +184,12 @@ export function jsonifySchema<T extends ZodType<any, any, any>>(
     } else if (isZodOptional(schema)) {
         const optionalInnerSchema = schema.unwrap();
         return z.optional(
-            jsonifySchema(optionalInnerSchema)
+            jsonifySchema(optionalInnerSchema),
         ) as JsonifiedType<T>;
     } else if (isZodNullable(schema)) {
         const nullableInnerSchema = schema.unwrap();
         return z.nullable(
-            jsonifySchema(nullableInnerSchema)
+            jsonifySchema(nullableInnerSchema),
         ) as JsonifiedType<T>;
     } else if (isZodUnion(schema)) {
         const unionSchemas = schema.options;
@@ -199,12 +197,12 @@ export function jsonifySchema<T extends ZodType<any, any, any>>(
     } else if (isZodTuple(schema)) {
         const tupleSchemas = schema.items;
         return z.tuple(
-            tupleSchemas.map(jsonifySchema)
+            tupleSchemas.map(jsonifySchema),
         ) as unknown as JsonifiedType<T>;
     } else if (isZodRecord(schema)) {
         const recordValueSchema = schema.valueSchema;
         return z.record(
-            jsonifySchema(recordValueSchema)
+            jsonifySchema(recordValueSchema),
         ) as unknown as JsonifiedType<T>;
     } else if (isZodString(schema)) {
         return z.string() as JsonifiedType<T>;
@@ -231,7 +229,7 @@ export function jsonifySchema<T extends ZodType<any, any, any>>(
         throw new Error(
             `jsonifySchema: Unsupported schema type: ${
                 (schema as any)._def.typeName
-            }`
+            }`,
         );
     }
 }

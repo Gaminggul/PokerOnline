@@ -28,7 +28,7 @@ type JsonTypeObject<T> = {
     [K in keyof T]: ConvertToJson<T[K]>;
 };
 
-import type { ZodObject} from "zod";
+import type { ZodObject } from "zod";
 import { type ZodType } from "zod";
 import { jsonifySchema } from "./jsonify";
 
@@ -41,7 +41,7 @@ type ZodTransformer<T extends ZodType<any, any, any>> = T extends ZodType<
     : never;
 
 export function createJsonSchema<T extends ZodObject<any, any, any>>(
-    schema: T
+    schema: T,
 ): ZodTransformer<T> {
     return jsonifySchema(schema).transform<ZodType<any, any, any>>((input) => {
         const parsedInput = Object.entries(input).reduce(
@@ -59,7 +59,7 @@ export function createJsonSchema<T extends ZodObject<any, any, any>>(
 
                 return acc;
             },
-            {} as any
+            {} as any,
         );
 
         return parsedInput;

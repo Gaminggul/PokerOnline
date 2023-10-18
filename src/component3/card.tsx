@@ -64,17 +64,17 @@ export function Card3d({ card }: { card: CardId | "hidden" }) {
         () =>
             frontTexture &&
             new MeshStandardMaterial({ map: frontTexture, transparent: true }),
-        [frontTexture]
+        [frontTexture],
     );
     const materialBack = useMemo(
         () =>
             backTexture &&
             new MeshStandardMaterial({ map: backTexture, transparent: true }),
-        [backTexture]
+        [backTexture],
     );
     const gap_material = useMemo(
         () => new MeshStandardMaterial({ color: "white" }),
-        []
+        [],
     );
 
     if (!materialFront || !materialBack) {

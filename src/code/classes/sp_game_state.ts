@@ -43,7 +43,7 @@ export class SPPlayer implements Player {
         return this.name;
     }
 
-   get_state(): PlayerState {
+    get_state(): PlayerState {
         return this.state;
     }
 
@@ -80,6 +80,11 @@ export class SPPlayer implements Player {
     }
 }
 
+const events = {
+    on_start: () => {},
+    on_end: () => {},
+} satisfies typeof GameInstance.prototype.events;
+
 export class SPGameState implements GameState<SPPlayer> {
     instance: GameInstance<SPPlayer>;
 
@@ -87,9 +92,8 @@ export class SPGameState implements GameState<SPPlayer> {
         this.instance = instance;
     }
 
-    action(action: PlayerAction, pid: string): SPGameState {
-        const new_instance = this.instance.action(action, pid);
-        return new SPGameState(new_instance);
+    action(action: PlayerAction, pid: string) {
+        this.instance.action(action, pid);
     }
 
     static generate(
@@ -100,9 +104,9 @@ export class SPGameState implements GameState<SPPlayer> {
             chips: number;
             bot: BotConfig | undefined;
         }>,
-        variant: GameVariants
+        variant: GameVariants,
     ): SPGameState {
-        const new_instance = GameInstance.generate(
+        const new_instance = GameInstance.generate_new(
             game_id,
             users,
             variant,
@@ -118,14 +122,15 @@ export class SPGameState implements GameState<SPPlayer> {
                     had_turn: data.had_turn,
                     name: user.name,
                     bot: user.bot,
-                })
+                }),
+            events,
         );
         return new SPGameState(new_instance);
     }
 
     restart(): SPGameState {
         return new SPGameState(
-            GameInstance.generate(
+            GameInstance.generate_new(
                 v4(),
                 this.instance.players,
                 this.instance.variant,
@@ -141,8 +146,8 @@ export class SPGameState implements GameState<SPPlayer> {
                         had_turn: data.had_turn,
                         name: u.name,
                         bot: u.bot,
-                    })
-            )
+                    }),
+            ),
         );
     }
 }

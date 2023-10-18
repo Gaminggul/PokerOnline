@@ -16,7 +16,7 @@ export async function cleanup_timeouts(lobby: Lobby & { users: User[] }) {
             "Removing users",
             users_to_remove.map((u) => u.id),
             "from lobby",
-            lobby.id
+            lobby.id,
         );
         await prisma.lobby.update({
             where: {

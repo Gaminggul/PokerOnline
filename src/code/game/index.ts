@@ -13,16 +13,16 @@ function get_winners(state: GameData): GamePlayerData[] | undefined {
         max(
             possible_winners.map((player) => {
                 const combination = get_combination(
-                    [player.card1, player.card2].concat(state.centerCards)
+                    [player.card1, player.card2].concat(state.centerCards),
                 );
                 return combination.type === "none"
                     ? 0
                     : combination.base_score * 100 + combination.score;
-            })
+            }),
         ) ?? 0;
     const winners = possible_winners.filter((player) => {
         const combination = get_combination(
-            [player.card1, player.card2].concat(state.centerCards)
+            [player.card1, player.card2].concat(state.centerCards),
         );
         return (
             combination.type !== "none" &&
@@ -59,7 +59,7 @@ function by_player_id(state: GameData, id: string): GamePlayerData | undefined {
 
 export function compute_next_state(
     originalState: Readonly<GameData>,
-    action: Readonly<PlayerAction>
+    action: Readonly<PlayerAction>,
 ): GameData {
     let state = cloneDeep(originalState) as GameData;
 
@@ -85,8 +85,8 @@ export function compute_next_state(
                     (p) =>
                         !is_inactive(
                             by_player_id(state, p.id) ??
-                                panic("Invalid player id")
-                        )
+                                panic("Invalid player id"),
+                        ),
                 ).length <= 1
             );
         })() &&

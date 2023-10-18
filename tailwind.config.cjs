@@ -6,15 +6,15 @@ module.exports = {
         "./src/**/*.{js,ts,jsx,tsx}",
         "./node_modules/@nextui-org/theme/dist/**/*.{js,ts,jsx,tsx}",
     ],
-    darkMode: 'class',
+    darkMode: "class",
     theme: {
         extend: {},
     },
-    plugins: [nextui({
-        themes: {
-            dark: {
-
-            }
-        }
-    })],
+    plugins: [
+        nextui({
+            themes: {
+                dark: {},
+            },
+        }),
+    ],
 };

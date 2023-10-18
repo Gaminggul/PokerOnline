@@ -40,7 +40,7 @@ export function unsubscribe(channelName: string): void {
 }
 
 export function useChannel<T extends string | undefined>(
-    channelName: T
+    channelName: T,
 ): T extends string ? Channel : undefined {
     const [channel, setChannel] = useState<Channel | null>(null);
 

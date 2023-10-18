@@ -18,12 +18,19 @@ const DarkModeToggle: React.FC = () => {
     return (
         <Button
             className="flex w-fit self-center rounded-md"
-			color="secondary"
+            color="secondary"
             onClick={toggleDarkMode}
-			variant="shadow"
+            variant="shadow"
         >
-            <p className="text-sm">Turn on {isDarkMode ? "light" : "dark"} mode</p>
-            <DarkModeSwitch size={40} onChange={noop} checked={isDarkMode} sunColor="#ffe666"/>
+            <p className="text-sm">
+                Turn on {isDarkMode ? "light" : "dark"} mode
+            </p>
+            <DarkModeSwitch
+                size={40}
+                onChange={noop}
+                checked={isDarkMode}
+                sunColor="#ffe666"
+            />
         </Button>
     );
 };

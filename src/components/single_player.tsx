@@ -40,7 +40,7 @@ const start_user_data = [
 
 function SinglePlayer({ id }: { id: string }) {
     const [spGameState, setSpGameState] = useState<SPGameState>(
-        SPGameState.generate(id, start_user_data, "texas_holdem")
+        SPGameState.generate(id, start_user_data, "texas_holdem"),
     );
 
     const current =
@@ -65,7 +65,7 @@ function SinglePlayer({ id }: { id: string }) {
 
                 const bot_action = getBotAction(
                     new_state.instance.visualize(next_player.get_pid()),
-                    next_player.bot
+                    next_player.bot,
                 );
                 console.log(bot_action);
                 new_state = new_state.action(bot_action, next_player.get_pid());
@@ -73,7 +73,7 @@ function SinglePlayer({ id }: { id: string }) {
             }
             setSpGameState(new_state);
         },
-        [current, spGameState]
+        [current, spGameState],
     );
 
     useEffect(() => {
@@ -82,7 +82,7 @@ function SinglePlayer({ id }: { id: string }) {
             console.log(spGameState);
             const bot_action = getBotAction(
                 spGameState.instance.visualize(startPlayer.get_pid()),
-                startPlayer.bot
+                startPlayer.bot,
             );
             console.log(bot_action);
             action_handler(bot_action);

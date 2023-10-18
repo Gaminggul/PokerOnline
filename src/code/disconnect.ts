@@ -16,14 +16,14 @@ export async function disconnect_user(user_id: string) {
                         include: {
                             players: {
                                 include: {
-                                    user: true
-                                }
-                            }
+                                    user: true,
+                                },
+                            },
                         },
                     },
-                    users: true
-                }
-            }
+                    users: true,
+                },
+            },
         },
     });
     if (!user) {
@@ -37,5 +37,5 @@ export async function disconnect_user(user_id: string) {
     }
     const mplobby = new MPLobby(lobby);
     mplobby.remove_user(user_id);
-    await mplobby.distribute()
+    await mplobby.distribute();
 }

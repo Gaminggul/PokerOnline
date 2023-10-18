@@ -53,7 +53,7 @@ function AnimatedCard({ card }: { card: CardId | "hidden" }) {
             const shouldHide = card === "hidden";
             const targetRotation = shouldHide ? degToRad(-180) : 0;
 
-            const delta = clock.getElapsedTime()
+            const delta = clock.getElapsedTime();
 
             // Assuming a rotation around the x axis, modify as needed
             groupRef.current.rotation.y +=
