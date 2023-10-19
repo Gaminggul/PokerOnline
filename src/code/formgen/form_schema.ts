@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 type ValueSchema =
     | {
           type: "subobject";
@@ -135,4 +137,5 @@ const testSchema = {
     },
 } satisfies ValueSchema;
 
-type V = InferValue<typeof testSchema>;
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+type _ = InferValue<typeof testSchema>;

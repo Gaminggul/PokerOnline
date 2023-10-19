@@ -1,6 +1,6 @@
 import { Button } from "@nextui-org/react";
 import { noop } from "functional-utilities";
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { DarkModeSwitch } from "react-toggle-dark-mode";
 
 const DarkModeToggle: React.FC = () => {

@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 type Validator<T> = (
     str: T,
 ) => { valid: true } | { valid: false; error: string };

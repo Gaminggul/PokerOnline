@@ -63,7 +63,7 @@ const WarnClose: React.FC<WarnCloseProps> = ({ warning }) => {
                             <Button
                                 color="danger"
                                 variant="light"
-                                onPress={proceedWithNavigation}
+                                onPress={() => void proceedWithNavigation()}
                             >
                                 Leave
                             </Button>

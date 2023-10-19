@@ -5,19 +5,14 @@ import { noop } from "functional-utilities";
 import { Avatar } from "@nextui-org/react";
 import DarkModeToggle from "./dark_mode_toggle";
 
-export function Layout(props: PropsWithChildren<{ show_banner: boolean }>) {
+export function Layout(props: PropsWithChildren<{}>) {
     return (
         <div>
-            {props.show_banner ? (
-                <div className="flex h-32 w-full items-center justify-center bg-gray-400">
-                    <p>Banner Bild</p>
-                </div>
-            ) : undefined}
-            <div className="flex">
+            <div className="">
+                <Navigation></Navigation>
                 <main className="min-h-screen w-full overflow-auto bg-slate-100 dark:bg-slate-700">
                     {props.children}
                 </main>
-                <Sidebar></Sidebar>
             </div>
         </div>
     );
@@ -31,10 +26,9 @@ function SidebarButton(props: { text: string }) {
     );
 }
 
-function Sidebar() {
+function Navigation() {
     return (
-        <div className="max-w-1/6 flex h-screen w-64 min-w-[100px] flex-col items-stretch gap-3 bg-slate-200 p-6 py-4 text-2xl text-black dark:bg-slate-900 dark:text-slate-100">
-            <Profile />
+        <div className="flex px-5 gap-5 bg-slate-200 p-2 text-2xl text-black dark:bg-slate-900 dark:text-slate-100">
             <Link href="/">
                 <SidebarButton text="Home" />
             </Link>
@@ -51,7 +45,10 @@ function Sidebar() {
             >
                 <SidebarButton text="Logout" />
             </button>
-            <DarkModeToggle></DarkModeToggle>
+            <div className="ml-auto flex items-center gap-5">
+                <DarkModeToggle></DarkModeToggle>
+                <Profile />
+            </div>
         </div>
     );
 }
@@ -59,7 +56,7 @@ function Sidebar() {
 function Profile() {
     const { data: session } = useSession({ required: true });
     return (
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between gap-2">
             <p className="text-base">{session?.user.name}</p>
             <Avatar
                 isBordered

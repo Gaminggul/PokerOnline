@@ -258,7 +258,22 @@ export class GameInstance<P extends Player> {
         });
     }
 
-    restart(): GameInstance<P> {}
+    restart<U>(
+        users: NonEmptyArray<U>,
+
+        init_player: (u: U, d: NewPlayerData) => P,
+    ): GameInstance<P> {
+        return new GameInstance({
+            id: this.id,
+            restartAt: undefined,
+            current_game_state: PureGameState.generate(
+                users,
+                this.current_game_state.variant,
+                init_player,
+            ),
+            events: this.events,
+        });
+    }
 
     remove_player(pid: string) {
         this.current_game_state = this.current_game_state.force_action(

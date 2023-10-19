@@ -110,7 +110,7 @@ export const gameRouter = createTRPCRouter({
                     },
                 })) ?? panic("Player not found");
             const game = MPGameState.from_prisma_data(player.game);
-            game.instance = game.instance.action(input, player.id);
+            game.instance.action(input, player.id);
             await game.distribute();
         }),
 });

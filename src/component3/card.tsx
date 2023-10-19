@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useGLTF } from "@react-three/drei";
 import type { CardId } from "../code/cards";
 import { degToRad } from "three/src/math/MathUtils";

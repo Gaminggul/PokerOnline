@@ -32,15 +32,15 @@ function Home() {
     const router = useRouter();
     const globalRoundResetMutation = api.lobby.globalRoundReset.useMutation();
     return (
-        <Layout show_banner={true}>
-            <div className="flex flex-col p-12">
+        <Layout>
+            <div className="flex flex-col h-full p-12">
                 <h1 className="flex gap-2 text-3xl font-bold">
                     Hello {session.data?.user.name}{" "}
                     <Avatar
                         src={session.data?.user?.image ?? "/favicon.ico"}
                     ></Avatar>
                 </h1>
-                <div className="mt-12 flex justify-evenly gap-4">
+                <div className="flex justify-evenly h-full align-center gap-4">
                     <OptionBox title="Tournaments">
                         <ul>
                             <li>Tournament 1</li>

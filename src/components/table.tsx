@@ -1,17 +1,13 @@
-import { type CardId, get_combination, filter_cards } from "../code/cards";
+import { type CardId } from "../code/cards";
 import type {
-    VisualPlayerState,
     VisualGameState,
     PlayerAction,
 } from "../code/game_data";
 import { useEffect, useRef, useState } from "react";
-import { max } from "lodash-es";
-import { Timer } from "./timer";
-import { at, panic } from "functional-utilities";
-import { Canvas, useFrame, useThree } from "@react-three/fiber";
+import { panic } from "functional-utilities";
+import { Canvas, useFrame } from "@react-three/fiber";
 import { Card3d } from "../component3/card";
-import { Stats, OrbitControls } from "@react-three/drei";
-import { degToRad, radToDeg } from "three/src/math/MathUtils";
+import { degToRad } from "three/src/math/MathUtils";
 
 type TableComponent = (props: {
     state: VisualGameState;
@@ -21,8 +17,6 @@ type TableComponent = (props: {
 
 export const Table: TableComponent = ({
     state,
-    submit_action,
-    restart_action,
 }) => {
     const you =
         state.players.find((p) => p.you) ??

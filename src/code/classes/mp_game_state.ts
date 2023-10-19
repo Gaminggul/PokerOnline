@@ -119,7 +119,8 @@ export class MPPlayer implements Player, PrismaPlayer {
 }
 
 const events = {
-    on_end: (winners) => {},
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    on_end: (_) => {},
     on_start: () => {},
 } satisfies typeof GameInstance.prototype.events;
 

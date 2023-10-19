@@ -4,7 +4,6 @@ import type { GameState, Player } from "../interfaces/player";
 import { CardIdSchema } from "../card_tuple";
 import { type CardId } from "../cards";
 import type { PlayerAction } from "../game_data";
-import { v4 } from "uuid";
 import type { NonEmptyArray } from "functional-utilities";
 import { type BotConfig } from "../bot";
 import { type GetProperties } from "../../utils/get_properties";
@@ -128,26 +127,22 @@ export class SPGameState implements GameState<SPPlayer> {
         return new SPGameState(new_instance);
     }
 
-    restart(): SPGameState {
-        return new SPGameState(
-            GameInstance.generate_new(
-                v4(),
-                this.instance.players,
-                this.instance.variant,
-                (u, data, game_id) =>
-                    new SPPlayer({
-                        id: u.id,
-                        card1: data.card1,
-                        card2: data.card2,
-                        state: data.state,
-                        chip_amount: u.chip_amount,
-                        bet: data.bet,
-                        gameId: game_id,
-                        had_turn: data.had_turn,
-                        name: u.name,
-                        bot: u.bot,
-                    }),
-            ),
+    restart() {
+        this.instance.restart(
+            this.instance.current_game_state.players,
+            (u, data) =>
+                new SPPlayer({
+                    id: u.id,
+                    card1: data.card1,
+                    card2: data.card2,
+                    state: data.state,
+                    chip_amount: u.chip_amount,
+                    bet: data.bet,
+                    gameId: this.instance.id,
+                    had_turn: data.had_turn,
+                    name: u.name,
+                    bot: u.bot,
+                }),
         );
     }
 }

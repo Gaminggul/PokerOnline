@@ -117,21 +117,26 @@ export const lobbyRouter = createTRPCRouter({
                 },
                 players: {
                     createMany: {
-                        data: generated_game.instance.players.map((p) => ({
-                            bet: p.bet,
-                            card1: p.card1,
-                            card2: p.card2,
-                            chip_amount: p.chip_amount,
-                            id: p.id,
-                            state: p.state,
-                            had_turn: p.had_turn,
-                        })),
+                        data: generated_game.instance.current_game_state.players.map(
+                            (p) => ({
+                                bet: p.bet,
+                                card1: p.card1,
+                                card2: p.card2,
+                                chip_amount: p.chip_amount,
+                                id: p.id,
+                                state: p.state,
+                                had_turn: p.had_turn,
+                            }),
+                        ),
                     },
                 },
-                centerCards: generated_game.instance.centerCards,
-                centerRevealAmount: generated_game.instance.centerRevealAmount,
-                pot: generated_game.instance.pot,
-                variant: generated_game.instance.variant,
+                centerCards:
+                    generated_game.instance.current_game_state.centerCards,
+                centerRevealAmount:
+                    generated_game.instance.current_game_state
+                        .centerRevealAmount,
+                pot: generated_game.instance.current_game_state.pot,
+                variant: generated_game.instance.current_game_state.variant,
                 id: v4(),
             },
             include: {
