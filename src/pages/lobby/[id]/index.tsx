@@ -46,7 +46,7 @@ function Lobby() {
     const [lobby, setLobby] = useState<VisualLobbyState | null>(null);
     const joiningRef = useRef(false);
     const joinAction = api.lobby.lobbyAction.useMutation();
-    const lobbyQuery = api.lobby.getLobby.useQuery(undefined, { cacheTime: 0 });
+    const lobbyQuery = api.lobby.getLobby.useQuery(undefined);
     const pongMutation = api.lobby.pong.useMutation();
 
     const [warnOnNavigation, setWarnOnNavigation] = useState(false);
@@ -143,7 +143,7 @@ function Lobby() {
 
     return (
         <>
-            <Layout show_banner={false}>
+            <Layout>
                 {lobby ? (
                     <LobbyPage lobby={lobby} />
                 ) : (

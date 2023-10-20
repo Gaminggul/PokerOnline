@@ -10,7 +10,7 @@ const SinglePlayer = dynamic(() => import("../components/single_player"), {
 function Game() {
     const [gameId] = useState("SinglePlayer");
     return (
-        <Layout show_banner={false}>
+        <Layout>
             {gameId && typeof gameId === "string" ? (
                 <SinglePlayer id={gameId} />
             ) : (

@@ -1,8 +1,5 @@
 import { type CardId } from "../code/cards";
-import type {
-    VisualGameState,
-    PlayerAction,
-} from "../code/game_data";
+import type { VisualGameState, PlayerAction } from "../code/game_data";
 import { useEffect, useRef, useState } from "react";
 import { panic } from "functional-utilities";
 import { Canvas, useFrame } from "@react-three/fiber";
@@ -15,9 +12,7 @@ type TableComponent = (props: {
     restart_action: () => void;
 }) => JSX.Element;
 
-export const Table: TableComponent = ({
-    state,
-}) => {
+export const Table: TableComponent = ({ state }) => {
     const you =
         state.players.find((p) => p.you) ??
         state.players[0] ??

@@ -1,11 +1,11 @@
 import { signOut, useSession } from "next-auth/react";
 import Link from "next/link";
-import { type PropsWithChildren } from "react";
+import { ReactNode } from "react";
 import { noop } from "functional-utilities";
 import { Avatar } from "@nextui-org/react";
 import DarkModeToggle from "./dark_mode_toggle";
 
-export function Layout(props: PropsWithChildren<{}>) {
+export function Layout(props: { children: ReactNode }) {
     return (
         <div>
             <div className="">
@@ -28,7 +28,7 @@ function SidebarButton(props: { text: string }) {
 
 function Navigation() {
     return (
-        <div className="flex px-5 gap-5 bg-slate-200 p-2 text-2xl text-black dark:bg-slate-900 dark:text-slate-100">
+        <div className="flex gap-5 bg-slate-200 p-2 px-5 text-2xl text-black dark:bg-slate-900 dark:text-slate-100">
             <Link href="/">
                 <SidebarButton text="Home" />
             </Link>

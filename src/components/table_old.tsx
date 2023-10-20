@@ -4,10 +4,11 @@ import type {
     VisualGameState,
     PlayerAction,
 } from "../code/game_data";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { max } from "lodash-es";
 import { isFirefox } from "react-device-detect";
 import { Timer } from "./timer";
+import { cycle } from "functional-utilities";
 
 type TableComponent = (props: {
     state: VisualGameState;
@@ -16,13 +17,13 @@ type TableComponent = (props: {
 }) => JSX.Element;
 
 function getRelativeBoundingClientRect(element: Element) {
-    let box = element.getBoundingClientRect();
+    const box = element.getBoundingClientRect();
     let parent = element.parentNode as Element | null;
 
     while (parent) {
         const style = getComputedStyle(parent);
         if (style.position === "relative") {
-            let parentBox = parent.getBoundingClientRect();
+            const parentBox = parent.getBoundingClientRect();
             return {
                 top: box.top - parentBox.top,
                 left: box.left - parentBox.left,
@@ -45,36 +46,34 @@ function generateRegularPolygon(
     segments: number,
     height: number,
 ): Point[] {
-    const points: Point[] = [];
-
-    // Adjust the radius based on the height.
-    const radius = height / Math.sqrt(3);
-
-    // The step angle to increment by when generating each point
+    const points = [];
+    let angle = Math.PI / 2;
     const step = (2 * Math.PI) / segments;
-
-    // The first point below the center
-    points.push({
-        x: center.x,
-        y: center.y + height / 2,
-    });
-
-    // Generate the remaining points
-    for (let i = 1; i < segments; i++) {
-        // Incrementing the angle by 'step' each iteration
-        const angle = i * step;
-
-        // Computing the coordinates using trigonometric functions
-        const x = center.x + radius * Math.sin(angle);
-        const y = center.y - radius * Math.cos(angle); // Subtraction since the y-axis is inverted
-
+    for (let i = 0; i < segments; i++) {
         points.push({
-            x: x,
-            y: y,
+            x: center.x * Math.cos(angle),
+            y: center.y * Math.sin(angle),
         });
+        angle += step;
     }
+    const min_h = Math.min(...points.map((p) => p.y));
+    const max_h = Math.max(...points.map((p) => p.y));
+    const factor = height / (max_h - min_h);
 
-    return points;
+    const new_points = points
+        .map((p) => ({
+            x: p.x,
+            y: p.y - min_h,
+        }))
+        .map((p) => ({
+            x: p.x * factor,
+            y: p.y * factor,
+        }))
+        .map((p) => ({
+            x: p.x + center.x,
+            y: p.y + (center.y - ((max_h - min_h) * factor) / 2),
+        }));
+    return new_points;
 }
 
 function closestPointOnSegmentWithDistance(
@@ -83,60 +82,10 @@ function closestPointOnSegmentWithDistance(
     P: Point,
     d: number,
 ): Point {
-    if (d < 0) {
-        throw new Error("Distance must be non-negative");
-    }
-
-    // Vector AB
-    const AB = { x: B.x - A.x, y: B.y - A.y };
-
-    // Vector AP
-    const AP = { x: P.x - A.x, y: P.y - A.y };
-
-    // Scalar projection of AP onto AB, let's call it t
-    const t = (AP.x * AB.x + AP.y * AB.y) / (AB.x * AB.x + AB.y * AB.y);
-
-    // The point of perpendicular projection, let's call it Q
-    const Q = {
-        x: A.x + t * AB.x,
-        y: A.y + t * AB.y,
+    const AB = {
+        x: B.x - A.x,
+        y: B.y - A.y
     };
-
-    let closestPoint: Point;
-
-    if (t >= 0 && t <= 1) {
-        // Case 1: The projection Q lies within the segment
-        // Calculate PQ vector
-        const PQ = { x: Q.x - P.x, y: Q.y - P.y };
-
-        // Length of PQ
-        const len = Math.sqrt(PQ.x * PQ.x + PQ.y * PQ.y);
-
-        // Unit vector in the direction of PQ
-        const unitPQ = { x: PQ.x / len, y: PQ.y / len };
-
-        // Point at distance d along PQ from P
-        closestPoint = {
-            x: P.x + d * unitPQ.x,
-            y: P.y + d * unitPQ.y,
-        };
-    } else {
-        // Case 2: The closest point is one of the endpoints A or B
-        const distA = Math.sqrt((P.x - A.x) ** 2 + (P.y - A.y) ** 2);
-        const distB = Math.sqrt((P.x - B.x) ** 2 + (P.y - B.y) ** 2);
-        const closerPoint = distA < distB ? A : B;
-
-        const CP = { x: P.x - closerPoint.x, y: P.y - closerPoint.y };
-        const len = Math.sqrt(CP.x * CP.x + CP.y * CP.y);
-        const unitCP = { x: CP.x / len, y: CP.y / len };
-
-        closestPoint = {
-            x: closerPoint.x + d * unitCP.x,
-            y: closerPoint.y + d * unitCP.y,
-        };
-    }
-
-    return closestPoint;
 }
 
 function calculate_offsets(
@@ -166,12 +115,13 @@ function calculate_offsets(
     };
     const polygon = generateRegularPolygon(center, player_amount, bbox.height)
         .map((p) => ({
-            x: p.x * xy_ratio,
+            x: p.x,
             y: p.y,
         }))
         .map(get_closest);
 
-    
+    console.log(polygon);
+    return cycle(polygon, you_index, "left");
 }
 
 export const TableOld: TableComponent = ({
@@ -180,6 +130,7 @@ export const TableOld: TableComponent = ({
     restart_action,
 }) => {
     const [bet, setBet] = useState(0);
+    const tableElement = useRef<HTMLDivElement>(null);
     const [betInput, setBetInput] = useState("0");
     const min_bet = max(state.players.map((p) => p.bet)) ?? 0;
     const you_index = state.players.findIndex((player) => player.you);
@@ -196,7 +147,10 @@ export const TableOld: TableComponent = ({
                 {state.restartAt ? "Ended" : "Not end"}
             </p>
             <div className="flex justify-center">
-                <div className="aspect-square max-h-[50vh] w-[80%] overflow-hidden rounded-full border-[10px] border-orange-900 bg-green-800">
+                <div
+                    ref={tableElement}
+                    className="relative aspect-square max-h-[50vh] w-[80%] rounded-full border-[10px] border-orange-900 bg-green-800"
+                >
                     <div className="ml-6 mr-6 flex h-full items-center justify-center gap-4">
                         {state.centerCards.map((card, i) => {
                             return (
@@ -206,6 +160,27 @@ export const TableOld: TableComponent = ({
                             );
                         })}
                     </div>
+                    {tableElement.current
+                        ? calculate_offsets(
+                              tableElement.current,
+                              state.players.length,
+                              you_index,
+                          ).map((point, i) => {
+                              return (
+                                  <div
+                                      key={i}
+                                      style={{
+                                          position: "absolute",
+                                          left: point.x,
+                                          top: point.y,
+                                      }}
+                                      className="h-4 w-4 bg-red-500"
+                                  >
+                                      <div>Test</div>
+                                  </div>
+                              );
+                          })
+                        : null}
                 </div>
             </div>
             <div className="flex items-center justify-evenly">

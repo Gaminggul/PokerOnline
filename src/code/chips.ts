@@ -1,11 +1,26 @@
-import { panic, range } from "functional-utilities";
+import { panic } from "functional-utilities";
+import { InfiniteArray } from "./infinite_array";
 
 const colors = [
-    "white",
-    "red",
-    "green",
-    "blue",
-    // ...
+    "White",
+    "Red",
+    "Blue",
+    "Green",
+    "Black",
+    "Yellow",
+    "Orange",
+    "Purple",
+    "Cyan",
+    "Pink",
+    "Light Blue",
+    "Light Green",
+    "Grey",
+    "Light Purple",
+    "Light Cyan",
+    "Dark Blue",
+    "Dark Green",
+    "Dark Purple",
+    "Dark Cyan",
 ];
 
 type Chip = {
@@ -13,12 +28,19 @@ type Chip = {
     value: number;
 };
 
-function generate_chips(n: number): Chip[] {
-    // 1, 5, 10, 50, 100, 500, 1000, 5000, 10000, 50000, ...
-    return range(n).map((i) => {
-        const magnitude = Math.pow(10, Math.floor(i / 2));
-        const color = colors[i % colors.length] ?? panic();
-        const value = magnitude * (i % 2 === 0 ? 1 : 5);
-        return { color, value };
-    });
+export const chips: InfiniteArray<Chip> = new InfiniteArray((i) => {
+    const magnitude = Math.pow(10, Math.floor(i / 2));
+    const color = colors[i % colors.length] ?? panic();
+    const value = magnitude * (i % 2 === 0 ? 1 : 5);
+    return { color, value };
+});
+
+export function chips_up_to(value: number): Chip[] {
+    if (value == Infinity) {
+        throw new Error("Cannot get all chips up to infinity");
+    }
+    return chips.slice(
+        0,
+        chips.find_index((chip) => chip.value > value),
+    );
 }

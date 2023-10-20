@@ -33,17 +33,15 @@ function Home() {
     const globalRoundResetMutation = api.lobby.globalRoundReset.useMutation();
     return (
         <Layout>
-            <div className="flex flex-col h-full p-4">
+            <div className="flex h-full flex-col p-4">
                 <h1 className="flex gap-2 text-3xl font-bold">
                     Hello {session.data?.user.name}{" "}
                     <Avatar
                         src={session.data?.user?.image ?? "/favicon.ico"}
                     ></Avatar>
                 </h1>
-                <div className="flex justify-evenly h-full align-center gap-4">
-                    <div>
-                        
-                    </div>
+                <div className="align-center flex h-full justify-evenly gap-4">
+                    <div></div>
                     <OptionBox title="Play">
                         <div className="flex h-full flex-col items-center justify-evenly pb-8">
                             <Button

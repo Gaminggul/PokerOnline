@@ -1,5 +1,4 @@
 import type { PlayerAction } from "../code/game_data";
-import { Table } from "./table";
 import { useCallback, useEffect, useRef } from "react";
 import { v4 } from "uuid";
 import { SPGameState } from "../code/classes/sp_game_state";
