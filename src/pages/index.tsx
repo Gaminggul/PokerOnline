@@ -33,7 +33,7 @@ function Home() {
     const globalRoundResetMutation = api.lobby.globalRoundReset.useMutation();
     return (
         <Layout>
-            <div className="flex flex-col h-full p-12">
+            <div className="flex flex-col h-full p-4">
                 <h1 className="flex gap-2 text-3xl font-bold">
                     Hello {session.data?.user.name}{" "}
                     <Avatar
@@ -41,13 +41,9 @@ function Home() {
                     ></Avatar>
                 </h1>
                 <div className="flex justify-evenly h-full align-center gap-4">
-                    <OptionBox title="Tournaments">
-                        <ul>
-                            <li>Tournament 1</li>
-                            <li>Tournament 2</li>
-                            <li>Tournament 3</li>
-                        </ul>
-                    </OptionBox>
+                    <div>
+                        
+                    </div>
                     <OptionBox title="Play">
                         <div className="flex h-full flex-col items-center justify-evenly pb-8">
                             <Button
@@ -79,16 +75,6 @@ function Home() {
                                 Reset
                             </Button>
                         </div>
-                    </OptionBox>
-                    <OptionBox title="Social">
-                        <h3 className="text-xl">Online Friends</h3>
-                        <ul>
-                            <li>Friend 1</li>
-                            <li>Friend 2</li>
-                            <li>Friend 3</li>
-                        </ul>
-                        <h3 className="text-xl">Your Clan</h3>
-                        <p>Clan</p>
                     </OptionBox>
                 </div>
             </div>
